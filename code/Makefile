@@ -6,14 +6,15 @@ CFLAGS=-I$(IDIR)
 
 DEPS = ../fsm/fsm.h
 
-OBJ = no_comment.o
+#OBJ = no_comment.o
+OBJ = include.o
 
 TARGET = $(patsubst %.o,%,$(OBJ))
 
 %.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-all: no_comment
+all: $(TARGET)
 
 $(TARGET): $(OBJ)
 	$(CC) -o $@ $^ $(CFLAGS)

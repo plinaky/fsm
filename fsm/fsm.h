@@ -4,6 +4,7 @@
 
 struct fsm {
 	void (*state)(struct fsm *myfsm);
+	void *data;
 };
 
 
