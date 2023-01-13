@@ -3,14 +3,17 @@
 #include <stdlib.h>
 #include "fsm.h"
 
-static FILE *f;
-
-
 #define PAT_MAX_SIZE 32u
+
 struct pattern {
 	char str [PAT_MAX_SIZE];
 	unsigned char len;
 	unsigned char pos;
+};
+
+struct inc_parser {
+	FILE *f;	
+	char directive[PAT_MAX_SIZE];
 };
 
 static struct pattern inc_pattern = {
@@ -25,11 +28,37 @@ static void detect_pattern(struct fsm *myfsm);
 static void include_detected(struct fsm *myfsm);
 static void skip_util_eol(struct fsm *myfsm);
 
+static FILE *f;
+
+unsigned int inc_parse(FILE *infile)
+{
+	struct inc_parser my_inc_parser = {
+		infile,
+		"\0"
+	};
+
+	if (NULL == f)
+		return 1;
+	
+	FSM_DECLARE(parser);
+	parser->priv = (void *)(& my_inc_parser);
+	FSM_RUN(&parser, in_normal_mode);
+}
+
+
 static void in_normal_mode(struct fsm *myfsm)
 {
-	char next_char = fgetc(f);
+	char mychar;
+	struct inc_parser *my_inc_parser;
 
-	switch (next_char) {
+	my_inc_parser = (struct inc_parser *)(myfsm->priv);
+	mychar = fgetc(my_inc_parser->f);
+
+#ifdef DEBUG_INCLUDE
+	printf("%s : %c\n", __func__, mychar);
+#endif
+
+	switch (mychar) {
 		case EOF  : FSM_STOP(myfsm);
 		case ' '  :
 		case '\t' :
@@ -40,11 +69,22 @@ static void in_normal_mode(struct fsm *myfsm)
 	}
 }
 
+
 static void entering_hash_detected(struct fsm *myfsm)
 {
-	char next_char = fgetc(f);
+	char mychar;
+	struct inc_parser *my_inc_parser;
 
-	switch (next_char) {
+	my_inc_parser = (struct inc_parser *)(myfsm->priv);
+	mychar = fgetc(my_inc_parser->f);
+
+	char mychar = fgetc(f);
+
+#ifdef DEBUG_INCLUDE
+	printf("%s : %c\n", __func__, mychar);
+#endif
+
+	switch (mychar) {
 		case EOF  : FSM_STOP(myfsm);
 		case ' '  :
 		case '\t' : FSM_NEXT(myfsm, entering_hash_detected);
@@ -56,48 +96,80 @@ static void entering_hash_detected(struct fsm *myfsm)
 	}
 }
 
+
 static void detect_pattern(struct fsm *myfsm)
 {
 	struct pattern *pat = (struct pattern *)myfsm->data;
-	char next_char = fgetc(f);
+	char mychar = fgetc(f);
+
+	char mychar;
+	struct inc_parser *my_inc_parser;
+
+	my_inc_parser = (struct inc_parser *)(myfsm->priv);
+	mychar = fgetc(my_inc_parser->f);
+
+#ifdef DEBUG_INCLUDE
+	printf("%s : %c\n", __func__, mychar);
+#endif
 
 	pat->pos++;
-	if (next_char == pat->str[pat->pos]) {
+	if (mychar == pat->str[pat->pos]) {
 		if (pat->len - 1 == pat->pos)
 			FSM_NEXT(myfsm, include_detected);
 		else 
 			FSM_NEXT(myfsm, detect_pattern);
 	}
 
-	switch (next_char) {
+	switch (mychar) {
 		case EOF  : FSM_STOP(myfsm);
 		case '\n' :
 		case '\r' : FSM_NEXT(myfsm, in_normal_mode);
 		default   : FSM_NEXT(myfsm, skip_util_eol);
 	}
 }
+
 
 static void include_detected(struct fsm *myfsm)
 {
 	struct pattern *pat = (struct pattern *)myfsm->data;
-	char next_char = fgetc(f);
+	char mychar = fgetc(f);
+
+	char mychar;
+	struct inc_parser *my_inc_parser;
+
+	my_inc_parser = (struct inc_parser *)(myfsm->priv);
+	mychar = fgetc(my_inc_parser->f);
+
+#ifdef DEBUG_INCLUDE
+	printf("%s : %c\n", __func__, mychar);
+#endif
 
 	pat->pos = 0;
-	switch (next_char) {
+	switch (mychar) {
 		case EOF  : FSM_STOP(myfsm);
 		case '\n' :
-		case '\r' : printf("%c", next_char);
+		case '\r' : printf("%c", mychar);
 			    FSM_NEXT(myfsm, in_normal_mode);
-		default   : printf("%c", next_char);
+		default   : printf("%c", mychar);
 			    FSM_NEXT(myfsm, include_detected);
 	}
 }
 
+
 static void skip_util_eol(struct fsm *myfsm)
 {
-	char next_char = fgetc(f);
+	char mychar = fgetc(f);
+	char mychar;
+	struct inc_parser *my_inc_parser;
 
-	switch (next_char) {
+	my_inc_parser = (struct inc_parser *)(myfsm->priv);
+	mychar = fgetc(my_inc_parser->f);
+
+#ifdef DEBUG_INCLUDE
+	printf("%s : %c\n", __func__, mychar);
+#endif
+
+	switch (mychar) {
 		case EOF  : FSM_STOP(myfsm);
 		case '\n' :
 		case '\r' : FSM_NEXT(myfsm, in_normal_mode);
@@ -105,10 +177,10 @@ static void skip_util_eol(struct fsm *myfsm)
 	}
 }
 
+#ifdef TEST_INCLUDE
+
 int main(int argc, char *argv[])
 {
-	FSM_DECLARE(parser);
-
 	if (argc < 2)
 		return 1;
 
@@ -117,9 +189,11 @@ int main(int argc, char *argv[])
 	if (NULL == f)
 		return 1;
 
-	FSM_RUN(&parser, in_normal_mode);
+	inc_parse(f);
+
 	fclose(f);
 
 	return 0;
 }
 
+#endif /* TEST_INCLUDE */
