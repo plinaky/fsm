@@ -4,19 +4,18 @@ CC=gcc
 
 CFLAGS=-I$(IDIR)
 
-DEPS = ../fsm/fsm.h
+DEPS = ../fsm/fsm.h ./scan.h
 
-#OBJ = no_comment.o
-OBJ = include.o
+OBJ = no_comment.o include.o preproc.o scan.o
 
 TARGET = $(patsubst %.o,%,$(OBJ))
 
 %.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-all: $(TARGET)
+all: $(OBJ)
 
-$(TARGET): $(OBJ)
+%: %o
 	$(CC) -o $@ $^ $(CFLAGS)
 
 .PHONY: clean all
