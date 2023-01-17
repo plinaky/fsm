@@ -1,24 +1,34 @@
-IDIR =../fsm
+IDIR   = ../fsm
 
-CC=gcc
+CC     = gcc
 
-CFLAGS=-I$(IDIR)
+CFLAGS = -I$(IDIR)
 
-DEPS = ../fsm/fsm.h ./scan.h
+DEPS   = ../fsm/fsm.h
 
-OBJ = no_comment.o include.o preproc.o scan.o
+OBJ    = comment.o include.o preproc.o scan.o
 
 TARGET = $(patsubst %.o,%,$(OBJ))
+
+INC    = $(patsubst %.o,%.h,$(OBJ))
+
+DEPS  += INC
+
+
 
 %.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-all: $(OBJ)
+
+all: $(TARGET)
+
 
 %: %o
 	$(CC) -o $@ $^ $(CFLAGS)
 
+
 .PHONY: clean all
+
 
 clean:
 	rm -Rf $(TARGET) $(OBJ)

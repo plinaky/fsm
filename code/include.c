@@ -3,17 +3,21 @@
 #include <stdlib.h>
 #include "fsm.h"
 
+#define TEST_INCLUDE
+//#define DEBUG_INCLUDE
+
+
 #define PAT_MAX_SIZE 32u
+
+struct parser {
+	FILE *f;	
+	char directive[PAT_MAX_SIZE];
+};
 
 struct pattern {
 	char str [PAT_MAX_SIZE];
 	unsigned char len;
 	unsigned char pos;
-};
-
-struct inc_parser {
-	FILE *f;	
-	char directive[PAT_MAX_SIZE];
 };
 
 static struct pattern inc_pattern = {
@@ -22,18 +26,30 @@ static struct pattern inc_pattern = {
 	0
 };
 
-static void in_normal_mode(struct fsm *myfsm);
-static void entering_hash_detected(struct fsm *myfsm);
-static void detect_pattern(struct fsm *myfsm);
-static void include_detected(struct fsm *myfsm);
-static void skip_util_eol(struct fsm *myfsm);
+FSM_STATE(in_normal_mode,         myfsm);
+FSM_STATE(entering_hash_detected, myfsm);
+FSM_STATE(detect_pattern,         myfsm);
+FSM_STATE(include_detected,       myfsm);
+FSM_STATE(skip_util_eol,          myfsm);
 
-static FILE *f;
 
-unsigned int inc_parse(FILE *infile)
+#ifdef DEBUG_INCLUDE
+
+#define LOG_STATE(_PARSER_) do {                                 \
+	printf("\nEntering %s (line %d)\n", __func__, __LINE__); \
+} while(0)
+
+#else
+
+#define LOG_STATE
+
+#endif
+
+
+void inc_parse(FILE *f)
 {
-	struct inc_parser my_inc_parser = {
-		infile,
+	struct parser my_parser = {
+		f,
 		"\0"
 	};
 
@@ -41,22 +57,17 @@ unsigned int inc_parse(FILE *infile)
 		return 1;
 	
 	FSM_DECLARE(parser);
-	parser->priv = (void *)(& my_inc_parser);
+	parser.priv = (void *)(& my_parser);
 	FSM_RUN(&parser, in_normal_mode);
 }
 
 
-static void in_normal_mode(struct fsm *myfsm)
+FSM_STATE(in_normal_mode, myfsm)
 {
-	char mychar;
-	struct inc_parser *my_inc_parser;
+	FSM_DATA(myfsm, struct parser, my_parser);
+	char mychar = fgetc(my_parser->f);
 
-	my_inc_parser = (struct inc_parser *)(myfsm->priv);
-	mychar = fgetc(my_inc_parser->f);
-
-#ifdef DEBUG_INCLUDE
-	printf("%s : %c\n", __func__, mychar);
-#endif
+	LOG_STATE(my_parser);
 
 	switch (mychar) {
 		case EOF  : FSM_STOP(myfsm);
@@ -70,19 +81,13 @@ static void in_normal_mode(struct fsm *myfsm)
 }
 
 
-static void entering_hash_detected(struct fsm *myfsm)
+FSM_STATE(entering_hash_detected, myfsm)
 {
-	char mychar;
-	struct inc_parser *my_inc_parser;
+	FSM_DATA(myfsm, struct parser, my_parser);
+	char mychar = fgetc(my_parser->f);
 
-	my_inc_parser = (struct inc_parser *)(myfsm->priv);
-	mychar = fgetc(my_inc_parser->f);
+	LOG_STATE(my_parser);
 
-	char mychar = fgetc(f);
-
-#ifdef DEBUG_INCLUDE
-	printf("%s : %c\n", __func__, mychar);
-#endif
 
 	switch (mychar) {
 		case EOF  : FSM_STOP(myfsm);
@@ -97,20 +102,13 @@ static void entering_hash_detected(struct fsm *myfsm)
 }
 
 
-static void detect_pattern(struct fsm *myfsm)
+FSM_STATE(detect_pattern, myfsm)
 {
-	struct pattern *pat = (struct pattern *)myfsm->data;
-	char mychar = fgetc(f);
+	FSM_DATA(myfsm, struct parser, my_parser);
+	char mychar = fgetc(my_parser->f);
 
-	char mychar;
-	struct inc_parser *my_inc_parser;
+	LOG_STATE(my_parser);
 
-	my_inc_parser = (struct inc_parser *)(myfsm->priv);
-	mychar = fgetc(my_inc_parser->f);
-
-#ifdef DEBUG_INCLUDE
-	printf("%s : %c\n", __func__, mychar);
-#endif
 
 	pat->pos++;
 	if (mychar == pat->str[pat->pos]) {
@@ -129,22 +127,13 @@ static void detect_pattern(struct fsm *myfsm)
 }
 
 
-static void include_detected(struct fsm *myfsm)
+FSM_STATE(include_detected, myfsm)
 {
-	struct pattern *pat = (struct pattern *)myfsm->data;
-	char mychar = fgetc(f);
+	FSM_DATA(myfsm, struct parser, my_parser);
+	char mychar = fgetc(my_parser->f);
 
-	char mychar;
-	struct inc_parser *my_inc_parser;
+	LOG_STATE(my_parser);
 
-	my_inc_parser = (struct inc_parser *)(myfsm->priv);
-	mychar = fgetc(my_inc_parser->f);
-
-#ifdef DEBUG_INCLUDE
-	printf("%s : %c\n", __func__, mychar);
-#endif
-
-	pat->pos = 0;
 	switch (mychar) {
 		case EOF  : FSM_STOP(myfsm);
 		case '\n' :
@@ -156,18 +145,12 @@ static void include_detected(struct fsm *myfsm)
 }
 
 
-static void skip_util_eol(struct fsm *myfsm)
+FSM_STATE(skip_util_eol, myfsm)
 {
-	char mychar = fgetc(f);
-	char mychar;
-	struct inc_parser *my_inc_parser;
+	FSM_DATA(myfsm, struct parser, my_parser);
+	char mychar = fgetc(my_parser->f);
 
-	my_inc_parser = (struct inc_parser *)(myfsm->priv);
-	mychar = fgetc(my_inc_parser->f);
-
-#ifdef DEBUG_INCLUDE
-	printf("%s : %c\n", __func__, mychar);
-#endif
+	LOG_STATE(my_parser);
 
 	switch (mychar) {
 		case EOF  : FSM_STOP(myfsm);
@@ -176,6 +159,23 @@ static void skip_util_eol(struct fsm *myfsm)
 		default   : FSM_NEXT(myfsm, skip_util_eol);
 	}
 }
+
+
+void inc_parse(FILE *f)
+{
+	struct parser my_parser = {
+		f,
+		"\0"
+	};
+
+	if (NULL == f)
+		return 1;
+	
+	FSM_DECLARE(parser);
+	parser.priv = (void *)(& my_parser);
+	FSM_RUN(&parser, in_normal_mode);
+}
+
 
 #ifdef TEST_INCLUDE
 
