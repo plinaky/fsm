@@ -3,6 +3,56 @@
 #include <stdlib.h>
 #include "preproc.h"
 #include "fsm.h"
+#include "scan.h"
+
+
+//#define DEBUG_PREPROC
+#define TEST_PREPROC
+
+struct parser {
+	FILE *f;
+	char *str;
+	unsigned char pos;
+	int res;
+	unsigned int max_len;
+};
+
+struct str_list {
+	struct list_head list;
+	char *str;
+}
+
+struct str_list defines;
+struct str_list includes;
+
+FSM_STATE(dir_normal_mode,              myfsm);
+FSM_STATE(dir_assert,                   myfsm);
+FSM_STATE(dir_define,                   myfsm);
+FSM_STATE(dir_elif,                     myfsm);
+FSM_STATE(dir_else,                     myfsm);
+FSM_STATE(dir_endif,                    myfsm);
+FSM_STATE(dir_error,                    myfsm);
+FSM_STATE(dir_ident,                    myfsm);
+FSM_STATE(dir_if,                       myfsm);
+FSM_STATE(dir_ifdef,                    myfsm);
+FSM_STATE(dir_ifndef,                   myfsm);
+FSM_STATE(dir_import,                   myfsm);
+FSM_STATE(dir_include,                  myfsm);
+FSM_STATE(dir_include_next,             myfsm);
+FSM_STATE(dir_line,                     myfsm);
+FSM_STATE(dir_pragma_endregion,         myfsm);
+FSM_STATE(dir_pragma_GCC_dependency,    myfsm);
+FSM_STATE(dir_pragma_GCC_error,         myfsm);
+FSM_STATE(dir_pragma_GCC_poison,        myfsm);
+FSM_STATE(dir_pragma_GCC_system_header, myfsm);
+FSM_STATE(dir_pragma_GCC_system_header, myfsm);
+FSM_STATE(dir_pragma_GCC_warning,       myfsm);
+FSM_STATE(dir_pragma_once,              myfsm);
+FSM_STATE(dir_pragma_region,            myfsm);
+FSM_STATE(dir_sccs,                     myfsm);
+FSM_STATE(dir_unassert,                 myfsm);
+FSM_STATE(dir_undef,                    myfsm);
+FSM_STATE(dir_warning,                  myfsm);
 
 /* https://gcc.gnu.org/onlinedocs/cpp/Index-of-Directives.html */
 static char * directive [] = {

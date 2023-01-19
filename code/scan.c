@@ -120,6 +120,15 @@ unsigned char str_scan(FILE *f, char *str, unsigned int max_len)
 	if (max_len > MAX_STR_LEN - 1)
 		max_len = MAX_STR_LEN - 1;
 
+	/* This is by far the best achivable memory model for a FSM
+	 * or even hierarchical FSMs: a caller function declaring locally,
+	 * on the stack, the shared data structures, the address of which
+	 * being shared with children states. This avoids resorting either
+	 * to malloc or threading. One can even make sure that state machines
+	 * are strictly sequential in a hierarchical fsm system.
+	 * The execution of the program may then be a pure tree walk, completely
+	 * mono threaded.
+	 * */
 	struct parser my_parser = {
 		f,
 		str,
