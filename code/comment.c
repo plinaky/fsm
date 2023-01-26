@@ -112,8 +112,11 @@ FSM_STATE(exit_star_detected, myfsm)
 
 void comment(FILE *f)
 {
-	FSM_DECLARE(my_parser);
-	FSM_RUN(&my_parser, in_normal_mode);
+	struct parser my_parser = {f};
+	FSM_DECLARE(comment);
+
+	comment.priv = (void *)(&my_parser);
+	FSM_RUN(&comment, in_normal_mode);
 }
 
 #ifdef TEST_COMMENT
