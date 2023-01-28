@@ -10,6 +10,7 @@
 struct node {
 	struct list_head list;
 	unsigned int id;
+	void *priv;
 };
 
 #define NEW_NODE(_NAME_) struct node _NAME_ = { \
@@ -21,8 +22,8 @@ void print_node(struct node *my_node);
 void add_node(struct node *my_node, unsigned int id);
 
 #define ADD_NODE(_NODE_, _ID_) add_node( \
-		(struct node *)(_NODE_), \
-		(unsigned int)(_ID_))
+					 (struct node *)(_NODE_), \
+					 (unsigned int)(_ID_))
 
 
 
@@ -46,20 +47,20 @@ struct edge {
 void print_edge(struct edge *my_edge);
 
 void set_edge(struct edge *my_edge,
-		unsigned int s1,
-		unsigned int s2,
-		unsigned int val);
+	      unsigned int s1,
+	      unsigned int s2,
+	      unsigned int val);
 
 void add_edge(struct edge *my_edge,
-		unsigned int s1,
-		unsigned int s2,
-		unsigned int val);
+	      unsigned int s1,
+	      unsigned int s2,
+	      unsigned int val);
 
 #define INS_EDGE(_EDGE_, _S1_, _S2_, _V_) add_edge( \
-		(struct edge *)(_EDGE_),            \
-		(unsigned int)(_S1_),               \
-		(unsigned int)(_S2_),               \
-		(unsigned int)(_V_))
+						    (struct edge *)(_EDGE_),            \
+						    (unsigned int)(_S1_),               \
+						    (unsigned int)(_S2_),               \
+						    (unsigned int)(_V_))
 
 
 

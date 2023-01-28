@@ -1,6 +1,6 @@
 #ifndef _COMMENT_H
 #define _COMMENT_H
 
-void comment(FILE *f);
+unsigned int comment(FILE *f, char *out_buf);
 
 #endif
