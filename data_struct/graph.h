@@ -1,31 +1,35 @@
 #ifndef _GRAPH_H
 #define _GRAPH_H
 
+#include <stdio.h>
 #include "list.h"
 
+/*****************************************************************************/
+/*                       LISTS                                               */
+/*****************************************************************************/
+#define offsetof(TYPE, MEMBER) ((size_t) &((TYPE *)0)->MEMBER)
 
-/*****************************************************************************/
-/*                                 NODES                                     */
-/*****************************************************************************/
+#define container_of(ptr, type, member) ({				\
+	void *__mptr = (void *)(ptr);					\
+	((type *)(__mptr - offsetof(type, member))); })
+
 struct node {
-	struct list_head list;
-	unsigned int id;
-	void *priv;
+	struct node *next, *prev;
 };
 
-#define NEW_NODE(_NAME_) struct node _NAME_ = { \
-	LIST_HEAD_INIT(_NAME_.list), 0          \
+#define list_for_each_entry(pos, head, member)				\
+	for (pos = container_of((head)->next, typeof(*pos), member);	\
+	     &pos->member != (head);					\
+	     pos = container_of(pos->member.next, typeof(*pos), member))
+
+static inline void list_add_tail(struct node *new, struct node *head)
+{
+	head->prev = new;
+	new->next = head;
+	new->prev = prev;
+	head->prev->next = new;
+
 }
-
-void print_node(struct node *my_node);
-
-void add_node(struct node *my_node, unsigned int id);
-
-#define ADD_NODE(_NODE_, _ID_) add_node( \
-					 (struct node *)(_NODE_), \
-					 (unsigned int)(_ID_))
-
-
 
 /*****************************************************************************/
 /*                       EDGES : or adjacence matrixes                       */
@@ -37,55 +41,47 @@ void add_node(struct node *my_node, unsigned int id);
 
 struct edge {
 	struct list_head list;
-	unsigned int i, j, v;
+	void *s1, *s2;
 };
 
 #define NEW_EDGE(_NAME_) struct edge _NAME_ = { \
-	LIST_HEAD_INIT(_NAME_.list), 0, 0, 0 \
+	{&(_NAME_.list), &(_NAME_.list)}, NULL, NULL, 0 \
 }
 
-void print_edge(struct edge *my_edge);
+static inline void print_edge(struct edge *my_edge)
+{
+	struct edge *pos = NULL;
 
-void set_edge(struct edge *my_edge,
-	      unsigned int s1,
-	      unsigned int s2,
-	      unsigned int val);
-
-void add_edge(struct edge *my_edge,
-	      unsigned int s1,
-	      unsigned int s2,
-	      unsigned int val);
-
-#define INS_EDGE(_EDGE_, _S1_, _S2_, _V_) add_edge( \
-						    (struct edge *)(_EDGE_),            \
-						    (unsigned int)(_S1_),               \
-						    (unsigned int)(_S2_),               \
-						    (unsigned int)(_V_))
-
-
-
-/*****************************************************************************/
-/*              GRAPHS : simply a list of edges and a list of nodes          */
-/*****************************************************************************/
-struct graph {
-	struct node nodes;
-	struct edge edges;
-};
-
-#define NEW_GRAPH(_NAME_) struct graph _NAME_ = {     \
-	{LIST_HEAD_INIT(_NAME_.nodes.list), 0},       \
-	{LIST_HEAD_INIT(_NAME_.edges.list), 0, 0, 0}, \
+	printf("\n****************\n");
+	list_for_each_entry(pos, &(my_edge->list), list) 
+		printf("%p %p \n", pos->i, pos->j);
 }
 
-#define ADD_EDGE(_GRAPH_, _S1_, _S2_, _V_) do {   \
-	ADD_NODE(_GRAPH_.nodes, _S1_);            \
-	ADD_NODE(_GRAPH_.nodes, _S2_);            \
-	INS_EDGE(_GRAPH_.edges, _S1_, _S2_, _V_); \
-} while(0)
 
-#define PRINT_GRAPH(_GRAPH_) do {     \
-	print_node(&(_GRAPH_.nodes)); \
-	print_edge(&(_GRAPH_.edges)); \
-} while(0)
 
-#endif
+static inline void add_edge(struct edge *my_edge, void *s1, void *s2)
+{
+	struct edge *pos = NULL;
+	struct edge *elt = NULL;
+
+	list_for_each_entry(pos, &(my_edge->list), list) {
+
+		/* look if edge exists */
+		if ((pos->s1 == s1) && (pos->s2 == s2))
+			return;
+
+		/* add edges in lexicographical order */
+		if ((pos->i > s1) || ((pos->i == s1) && (pos->j > s2)))
+			break;
+	}
+
+	/* if not, try to create one */
+	elt = calloc(1, sizeof(struct edge));
+
+	if (NULL == elt)
+		return;
+
+	elt->s1 = s1;
+	elt->s2 = s2;
+	list_add_tail(&(elt->list), &(pos->list));
+}
