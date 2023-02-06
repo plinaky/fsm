@@ -2,86 +2,118 @@
 #define _GRAPH_H
 
 #include <stdio.h>
-#include "list.h"
 
-/*****************************************************************************/
-/*                       LISTS                                               */
-/*****************************************************************************/
-#define offsetof(TYPE, MEMBER) ((size_t) &((TYPE *)0)->MEMBER)
 
-#define container_of(ptr, type, member) ({				\
-	void *__mptr = (void *)(ptr);					\
-	((type *)(__mptr - offsetof(type, member))); })
+#define OFFSET(TYPE, MEMBER) ((size_t) &((TYPE *)0)->MEMBER)
+
+
+#define CONTAINER(PTR, TYPE, MEMBER) \
+	((TYPE *)((void *)(PTR) - OFFSET(TYPE, MEMBER)))
+
+
+#define FOR_EACH_BRO(POS, HEAD, MEMBER)				\
+	for (POS = CONTAINER(HEAD, typeof(*POS), MEMBER);	\
+	     &POS->MEMBER != (HEAD);			        \
+	     POS = CONTAINER(POS->MEMBER.bro, typeof(*POS), MEMBER))
+
+
+#define FOR_EACH_SON(POS, HEAD, MEMBER)				\
+	for (POS = CONTAINER(HEAD, typeof(*POS), MEMBER);	\
+	     &POS->MEMBER != (HEAD);			        \
+	     POS = CONTAINER(POS->MEMBER.son, typeof(*POS), MEMBER))
+
+
+#define NODE(_NAME_) struct node _NAME_ = {{&_NAME_, &_NAME_}}
+
 
 struct node {
-	struct node *next, *prev;
+	struct node *p[2];
 };
 
-#define list_for_each_entry(pos, head, member)				\
-	for (pos = container_of((head)->next, typeof(*pos), member);	\
-	     &pos->member != (head);					\
-	     pos = container_of(pos->member.next, typeof(*pos), member))
 
-static inline void list_add_tail(struct node *new, struct node *head)
+static inline void ins_node(struct node *new, struct node *pos, unsigned char level)
 {
-	head->prev = new;
-	new->next = head;
-	new->prev = prev;
-	head->prev->next = new;
+	struct node *tmp;
 
-}
-
-/*****************************************************************************/
-/*                       EDGES : or adjacence matrixes                       */
-/*****************************************************************************/
-/*
-** An adjancence matrix is assumed to have a low density,
-** thus it is represented by the chained list of its non null coeffs
-*/
-
-struct edge {
-	struct list_head list;
-	void *s1, *s2;
-};
-
-#define NEW_EDGE(_NAME_) struct edge _NAME_ = { \
-	{&(_NAME_.list), &(_NAME_.list)}, NULL, NULL, 0 \
-}
-
-static inline void print_edge(struct edge *my_edge)
-{
-	struct edge *pos = NULL;
-
-	printf("\n****************\n");
-	list_for_each_entry(pos, &(my_edge->list), list) 
-		printf("%p %p \n", pos->i, pos->j);
-}
-
-
-
-static inline void add_edge(struct edge *my_edge, void *s1, void *s2)
-{
-	struct edge *pos = NULL;
-	struct edge *elt = NULL;
-
-	list_for_each_entry(pos, &(my_edge->list), list) {
-
-		/* look if edge exists */
-		if ((pos->s1 == s1) && (pos->s2 == s2))
-			return;
-
-		/* add edges in lexicographical order */
-		if ((pos->i > s1) || ((pos->i == s1) && (pos->j > s2)))
-			break;
-	}
-
-	/* if not, try to create one */
-	elt = calloc(1, sizeof(struct edge));
-
-	if (NULL == elt)
+	if (new == pos)
 		return;
 
-	elt->s1 = s1;
-	elt->s2 = s2;
-	list_add_tail(&(elt->list), &(pos->list));
+	tmp = pos->p[level];
+	pos->p[level] = new;
+	new->p[level] = tmp;
+}
+
+
+
+static inline struct node *get_prev(struct node *pos, unsigned char level)
+{
+	struct node *cur = pos;
+
+	while (cur->p[level] != pos)
+		cur = cur->p[level];
+
+	return cur;
+}
+
+static inline struct node *rem_bro(struct node *top, struct node *pos)
+{
+	struct node *cur;
+
+	if (NULL == cur || NULL == pos)
+		return;
+
+	if (pos == top) {
+		cur = top->bro;
+		top->bro = NULL;
+		return cur;
+	}
+
+	cur = top;
+
+	while (NULL != cur->bro) {
+		if (pos == cur->bro) {
+			cur->bro = cur->bro->bro;
+			pos->bro = NULL;
+			break;
+		}
+	}
+
+	return top;
+}
+
+static inline struct node *rem_son(struct node *top, struct node *pos)
+{
+	struct node *cur;
+
+	if (NULL == cur || NULL == pos)
+		return NULL;
+
+	if (pos == top) {
+		cur = top->son;
+		top->son = NULL;
+		return cur;
+	}
+
+	cur = top;
+
+	while (NULL != cur->son) {
+		if (pos == cur->son) {
+			cur->son = cur->son->son;
+			pos->son = NULL;
+			break;
+		}
+	}
+
+	return top;
+}
+
+static inline struct node *rem_node(struct node *top, struct node *pos)
+{
+	struct node *cur = top;
+
+	while (NULL != cur) {
+		rem_bro()
+	} 
+
+	return top;
 }

@@ -1,10 +1,11 @@
-IDIR   = ../fsm
 
 CC     = gcc
 
-CFLAGS = -I$(IDIR)
+IDIR   = ../fsm ../data_struct
 
-DEPS   = ../fsm/fsm.h
+CFLAGS = $(patsubst %,-I%,$(IDIR))
+
+DEPS   = ../fsm/fsm.h ../data_struct/list.h
 
 OBJ    = comment.o include.o preproc.o scan.o
 

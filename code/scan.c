@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "fsm.h"
+#include "list.h"
 #include "scan.h"
 
 //#define DEBUG_SCAN
@@ -13,6 +14,7 @@ struct parser {
 	unsigned char pos;
 	int res;
 	unsigned int max_len;
+	FSM_DECLARE(operator);
 };
 
 
@@ -23,11 +25,9 @@ FSM_STATE(end_scan,    myfsm);
 
 #ifdef DEBUG_SCAN
 
-#define LOG_STATE(_PARSER_) do {             \
-	printf("\nEntering %s (line %d)\n",  \
-			__func__,            \
-			__LINE__);           \
-	print_parser(_PARSER_);              \
+#define LOG_STATE(_PARSER_) do {                                   \
+	printf("\nEntering %s (line %d)\n",  __func__, 	__LINE__); \
+	print_parser(_PARSER_);                                    \
 } while(0)
 
 #else
@@ -36,63 +36,63 @@ FSM_STATE(end_scan,    myfsm);
 
 #endif
 
-static inline void print_parser(struct parser *my_parser)
+static inline void print_parser(struct parser *myparser)
 {
-	printf("res = %d, str = \"", my_parser->res);
-	for (unsigned char i = 0 ; i < my_parser->pos ; i++)
-		printf("%c", my_parser->str[i]);
+	printf("res = %d, str = \"", myparser->res);
+	for (unsigned char i = 0 ; i < myparser->pos ; i++)
+		printf("%c", myparser->str[i]);
 	printf("\"\n");
 
 }
 
 FSM_STATE(normal_mode, myfsm)
 {
-	FSM_DATA(myfsm, struct parser, my_parser);
-	char mychar = fgetc(my_parser->f);
+	struct parser *myparser = container_of(myfsm, struct parser, operator);
+	char mychar = fgetc(myparser->f);
 
-	LOG_STATE(my_parser);
+	LOG_STATE(myparser);
 
 	switch (mychar) {
-		case EOF  : my_parser->res |= SCAN_EOF;
+		case EOF  : myparser->res |= SCAN_EOF;
 			    FSM_STOP(myfsm);
 		case ' '  :
 		case '\t' : FSM_NEXT(myfsm, normal_mode);
 		case '\n' :
 		case '\r' : FSM_STOP(myfsm);
-		default   : my_parser->str[my_parser->pos++] = mychar;
+		default   : myparser->str[myparser->pos++] = mychar;
 			    FSM_NEXT(myfsm, char_found);
 	}
 }
 
 FSM_STATE(word_mode, myfsm)
 {
-	FSM_DATA(myfsm, struct parser, my_parser);
-	char mychar = fgetc(my_parser->f);
+	struct parser *myparser = container_of(myfsm, struct parser, operator);
+	char mychar = fgetc(myparser->f);
 
-	LOG_STATE(my_parser);
+	LOG_STATE(myparser);
 
 	switch (mychar) {
-		case EOF  : my_parser->res |= SCAN_EOF;
+		case EOF  : myparser->res |= SCAN_EOF;
 			    FSM_NEXT(myfsm, end_scan);
 		case ' '  :
 		case '\t' : FSM_NEXT(myfsm, end_scan);
 		case '\n' :
-		case '\r' : my_parser->res |= SCAN_EOL;
+		case '\r' : myparser->res |= SCAN_EOL;
 			    FSM_NEXT(myfsm, end_scan);
-		default   : my_parser->str[my_parser->pos++] = mychar;
+		default   : myparser->str[myparser->pos++] = mychar;
 			    FSM_NEXT(myfsm, char_found);
 	}
 }
 
 FSM_STATE(char_found, myfsm)
 {
-	FSM_DATA(myfsm, struct parser, my_parser);
-	LOG_STATE(my_parser);
+	struct parser *myparser = container_of(myfsm, struct parser, operator);
 
-	my_parser->res |= SCAN_FOUND;
+	LOG_STATE(myparser);
+	myparser->res |= SCAN_FOUND;
 
-	if ((my_parser->max_len - 2) < my_parser->pos) {
-		my_parser->res |= SCAN_BUF_FULL;
+	if ((myparser->max_len - 2) < myparser->pos) {
+		myparser->res |= SCAN_BUF_FULL;
 		FSM_NEXT(myfsm, end_scan);
 	}
 
@@ -101,9 +101,10 @@ FSM_STATE(char_found, myfsm)
 
 FSM_STATE(end_scan, myfsm)
 {
-	FSM_DATA(myfsm, struct parser, my_parser);
-	LOG_STATE(my_parser);
-	my_parser->str[my_parser->pos++] = '\0';
+	struct parser *myparser = container_of(myfsm, struct parser, operator);
+
+	LOG_STATE(myparser);
+	myparser->str[myparser->pos++] = '\0';
 	FSM_STOP(myfsm);
 }
 
@@ -113,23 +114,13 @@ unsigned char str_scan(FILE *f, char *str, unsigned int max_len)
 		return SCAN_NO_FILE;
 
 	max_len++;
-
 	if (max_len < 1)
 		return SCAN_BUF_FULL;
 
 	if (max_len > MAX_STR_LEN - 1)
 		max_len = MAX_STR_LEN - 1;
 
-	/* This is by far the best achivable memory model for a FSM
-	 * or even hierarchical FSMs: a caller function declaring locally,
-	 * on the stack, the shared data structures, the address of which
-	 * being shared with children states. This avoids resorting either
-	 * to malloc or threading. One can even make sure that state machines
-	 * are strictly sequential in a hierarchical fsm system.
-	 * The execution of the program may then be a pure tree walk, completely
-	 * mono threaded.
-	 * */
-	struct parser my_parser = {
+	struct parser myparser = {
 		f,
 		str,
 		0,
@@ -139,11 +130,9 @@ unsigned char str_scan(FILE *f, char *str, unsigned int max_len)
 
 	str[0] = '\0';
 
-	FSM_DECLARE(parser_fsm);
-	parser_fsm.priv = (void *)(&my_parser);
-	FSM_RUN(&parser_fsm, normal_mode);
+	FSM_RUN(&myparser.operator, normal_mode);
 
-	return my_parser.res;
+	return myparser.res;
 }
 
 #ifdef TEST_SCAN
@@ -152,14 +141,14 @@ int main(int argc, char *argv[])
 {
 	FILE *f;
 	int ret;
-	char word_found[50];
+	char word_found[MAX_STR_LEN];
 
 	if (argc < 2)
 		return 1;
 
 	f = fopen(argv[1], "r");
 	do {
-		ret = STR_SCAN(f, word_found, 50);
+		ret = str_scan(f, word_found, MAX_STR_LEN - 1);
 
 		if (ret & SCAN_FOUND)
 			printf("%s ", word_found);
@@ -169,7 +158,6 @@ int main(int argc, char *argv[])
 
 	} while (!(ret & SCAN_EOF));
 
-	printf("\n\n***************************************************************************\n");
 	return 0;
 }
 

@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include "fsm.h"
+#include "list.h"
 #include "comment.h"
 
 #define TU_MAX_LEN 2000000u
@@ -14,6 +15,7 @@ struct parser {
 	FILE *f;
 	char *out_buf;
 	unsigned int size;
+	FSM_DECLARE(operator);
 };
 
 
@@ -36,25 +38,25 @@ FSM_STATE(exit_star_detected,      myfsm);
 #endif
 
 
-static inline void stack(struct parser *my_parser, char c)
+static inline void stack(struct parser *myparser, char c)
 {
-	if (my_parser->size < TU_MAX_LEN)
-		my_parser->out_buf[my_parser->size++] = c;
+	if (myparser->size < TU_MAX_LEN)
+		myparser->out_buf[myparser->size++] = c;
 	else
 		exit(EXIT_FAILURE);
 }
 
 FSM_STATE(in_normal_mode, myfsm)
 {
-	FSM_DATA(myfsm, struct parser, my_parser);
-	char c = fgetc(my_parser->f);
+	struct parser *myparser = container_of(myfsm, struct parser, operator);
+	char c = fgetc(myparser->f);
 
-	LOG_STATE(my_parser);
+	LOG_STATE(myparser);
 
 	switch (c) {
 		case EOF : FSM_STOP(myfsm);
 		case '/' : FSM_NEXT(myfsm, entering_slash_detected);
-		default  : stack(my_parser, c);
+		default  : stack(myparser, c);
 			   FSM_NEXT(myfsm, in_normal_mode);
 	}
 }
@@ -62,32 +64,32 @@ FSM_STATE(in_normal_mode, myfsm)
 
 FSM_STATE(entering_slash_detected, myfsm)
 {
-	FSM_DATA(myfsm, struct parser, my_parser);
-	char c = fgetc(my_parser->f);
+	struct parser *myparser = container_of(myfsm, struct parser, operator);
+	char c = fgetc(myparser->f);
 
-	LOG_STATE(my_parser);
+	LOG_STATE(myparser);
 	switch (c) {
 		case EOF : FSM_STOP(myfsm);
 		case '/' : FSM_NEXT(myfsm, in_line_comment);
 		case '*' : FSM_NEXT(myfsm, in_block_comment);
-		default  : stack(my_parser, '/');
-			   stack(my_parser, c);
+		default  : stack(myparser, '/');
+			   stack(myparser, c);
 	}	FSM_NEXT(myfsm, in_normal_mode);
 }
 
 
 FSM_STATE(in_line_comment, myfsm)
 {
-	FSM_DATA(myfsm, struct parser, my_parser);
-	char c = fgetc(my_parser->f);
+	struct parser *myparser = container_of(myfsm, struct parser, operator);
+	char c = fgetc(myparser->f);
 
-	LOG_STATE(my_parser);
+	LOG_STATE(myparser);
 
 	switch (c) {
 		case EOF  : FSM_STOP(myfsm);
-		case '\r' : stack(my_parser, '\n');
+		case '\r' : stack(myparser, '\n');
 			    FSM_NEXT(myfsm, in_normal_mode);
-		case '\n' : stack(my_parser, c);
+		case '\n' : stack(myparser, c);
 			    FSM_NEXT(myfsm, in_normal_mode);
 		default   : FSM_NEXT(myfsm, in_line_comment);
 	}
@@ -96,10 +98,10 @@ FSM_STATE(in_line_comment, myfsm)
 
 FSM_STATE(in_block_comment, myfsm)
 {
-	FSM_DATA(myfsm, struct parser, my_parser);
-	char c = fgetc(my_parser->f);
+	struct parser *myparser = container_of(myfsm, struct parser, operator);
+	char c = fgetc(myparser->f);
 
-	LOG_STATE(my_parser);
+	LOG_STATE(myparser);
 
 	switch (c) {
 		case EOF : FSM_STOP(myfsm);
@@ -111,10 +113,10 @@ FSM_STATE(in_block_comment, myfsm)
 
 FSM_STATE(exit_star_detected, myfsm)
 {
-	FSM_DATA(myfsm, struct parser, my_parser);
-	char c = fgetc(my_parser->f);
+	struct parser *myparser = container_of(myfsm, struct parser, operator);
+	char c = fgetc(myparser->f);
 
-	LOG_STATE(my_parser);
+	LOG_STATE(myparser);
 
 	switch (c) {
 		case EOF : FSM_STOP(myfsm);
@@ -126,13 +128,11 @@ FSM_STATE(exit_star_detected, myfsm)
 
 unsigned int comment(FILE *f, char *out_buf)
 {
-	struct parser my_parser = {f, out_buf, 0};
-	FSM_DECLARE(comment);
+	struct parser myparser = {f, out_buf, 0};
 
-	comment.priv = (void *)(&my_parser);
-	FSM_RUN(&comment, in_normal_mode);
+	FSM_RUN(&myparser.operator, in_normal_mode);
 
-	return my_parser.size;
+	return myparser.size;
 }
 
 #ifdef TEST_COMMENT
@@ -141,7 +141,7 @@ int main(int argc, char *argv[])
 {
 	FILE *f;
 	unsigned int i, ret;
-	char my_buf[TU_MAX_LEN];
+	char mybuf[TU_MAX_LEN];
 
 	if (argc < 2)
 		return 1;
@@ -151,15 +151,14 @@ int main(int argc, char *argv[])
 	if (NULL == f)
 		return 1;
 
-	ret = comment(f, my_buf);
+	ret = comment(f, mybuf);
 
 	fclose(f);
 
-	//printf("*********************************************************\n");
 	printf("%s : %d\n", argv[1], ret);
 
 	for (i = 0 ; i < ret ; i++)
-		printf("%c", my_buf[i]);
+		printf("%c", mybuf[i]);
 	printf("\n");
 
 
