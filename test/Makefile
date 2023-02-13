@@ -1,24 +1,35 @@
-IDIR =../fsm
 
-CC=gcc
+CC     = gcc
 
-CFLAGS=-I$(IDIR)
+IDIR   = ../fsm ../data_struct
 
-DEPS = ../fsm/fsm.h
+CFLAGS = $(patsubst %,-I%,$(IDIR))
 
-OBJ = no_comment.o
+DEPS   = ../fsm/fsm.h ../data_struct/list.h
+
+OBJ    = test.o heapstack.o
 
 TARGET = $(patsubst %.o,%,$(OBJ))
+
+INC    = $(patsubst %.o,%.h,$(OBJ))
+
+DEPS  += INC
+
+
 
 %.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-all: no_comment
 
-$(TARGET): $(OBJ)
+all: $(TARGET)
+
+
+%: %o
 	$(CC) -o $@ $^ $(CFLAGS)
 
+
 .PHONY: clean all
+
 
 clean:
 	rm -Rf $(TARGET) $(OBJ)
