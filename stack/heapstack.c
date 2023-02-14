@@ -2,8 +2,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/resource.h>
-#include "heapstack.h"
-
 
 
 #define TEST_HEAPSTACK

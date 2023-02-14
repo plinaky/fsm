@@ -1,11 +1,13 @@
 
 CC     = gcc
 
-IDIR   = .
+IDIR   = ../fsm ../data
 
 CFLAGS = $(patsubst %,-I%,$(IDIR))
 
-OBJ    = test.o
+DEPS   = ../fsm/fsm.h ../data/list.h
+
+OBJ    = scan.o
 
 TARGET = $(patsubst %.o,%,$(OBJ))
 

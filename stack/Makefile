@@ -5,7 +5,9 @@ IDIR   = .
 
 CFLAGS = $(patsubst %,-I%,$(IDIR))
 
-OBJ    = test.o
+DEPS   = ./heapstack.h
+
+OBJ    = heapstack.o
 
 TARGET = $(patsubst %.o,%,$(OBJ))
 
