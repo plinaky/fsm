@@ -1,11 +1,11 @@
 
 CC     = gcc
 
-IDIR   = ../fsm ../data_struct
+IDIR   = .
 
 CFLAGS = $(patsubst %,-I%,$(IDIR))
 
-DEPS   = ../fsm/fsm.h ../data_struct/list.h
+DEPS   = ./heapstack.h
 
 OBJ    = test.o heapstack.o
 

@@ -1,46 +1,62 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
-#include "fsm.h"
 #include <sys/resource.h>
+#include "heapstack.h"
 
+
+
+#define TEST_HEAPSTACK
+
+int set_max_stacksize(void)
+{
+	struct rlimit rl;
+	int res;
+	static unsigned int once = 0;
+
+	if (once) {
+		printf("stack size already increased\n");
+		return res;
+	}
+
+	res = getrlimit(RLIMIT_STACK, &rl);
+
+	if (0 != res) {
+		printf("getrlimit returned result = %d\n", res);
+		return res;
+	}
+
+	rl.rlim_cur = rl.rlim_max;
+	res = setrlimit(RLIMIT_STACK, &rl);
+
+	if (0 != res)
+		printf("setrlimit returned result = %d\n", res);
+	else
+		once = 1;
+
+	return res;
+}
+
+
+#ifdef TEST_HEAPSTACK
 struct data {
-	unsigned long long int field[1024 * 1024];
+	unsigned char field[0x3FFFFFFDF];
 };
 
-static void recurse(unsigned int i, struct data *add1, struct data *add2);
+static void recurse();
 
-static void recurse(unsigned int i, struct data *add1, struct data *add2)
+static void recurse()
 {
-	struct data d1;
-	struct data *d2;
+	struct data d;
 
-	//d2 = malloc(sizeof(struct data));
-
-	if (0 == i) {
-		add1 = &d1;
-		add2 = d2;
-	}
-	printf("%ld : %ld %ld \n", i, &d1 - add1, d2 - add2);
-	recurse(i + 1, add1, add2);
+	printf("%p\n", (void *)&d);
+	recurse();
 }
 
 int main(void)
 {
-	struct rlimit rl;
-	int res;
-
-	res = getrlimit(RLIMIT_STACK, &rl);
-
-	if (0 == res) {
-		rl.rlim_cur = rl.rlim_max;
-		res = setrlimit(RLIMIT_STACK, &rl);
-		if (0 != res)
-			printf("setrlimit returned result = %d\n", res);
-	}
-
-	recurse(0, NULL, NULL);
+	set_max_stacksize();
+	recurse();
 	return 0;
 }
-
+#endif
