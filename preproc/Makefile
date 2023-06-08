@@ -5,6 +5,8 @@ IDIR   = ../fsm ../data
 
 CFLAGS = $(patsubst %,-I%,$(IDIR))
 
+CFLAGS+= -ggdb
+
 DEPS   = ../fsm/fsm.h ../data/list.h
 
 OBJ    = comment.o include.o preproc.o

@@ -2,22 +2,26 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <sys/mman.h>
+#include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include "fsm.h"
 #include "list.h"
 #include "comment.h"
 
-#define TU_MAX_LEN 2000000u
 
 #define TEST_COMMENT
 //#define DEBUG_COMMENT
 
 struct parser {
-	FILE *f;
-	char *out_buf;
-	unsigned int size;
+	char *buf;
+	unsigned int pos;
+	unsigned int len;
+	unsigned int off;
 	FSM_DECLARE(operator);
 };
-
 
 FSM_STATE(in_normal_mode,          myfsm);
 FSM_STATE(entering_slash_detected, myfsm);
@@ -27,8 +31,25 @@ FSM_STATE(exit_star_detected,      myfsm);
 
 #ifdef DEBUG_COMMENT
 
-#define LOG_STATE(_PARSER_) do {                                 \
-	printf("\nEntering %s (line %d)\n", __func__, __LINE__); \
+static inline char symb(char c)
+{
+	switch (c) {
+	case '\n' :
+	case '\r' :
+	case '\t' :
+	case EOF  :
+		return ' ';
+	}
+	return c;
+}
+
+#define LOG_STATE(_PAR_) do {                             \
+	printf("char: %c pos: %d len: %d off: %d (%s)\n", \
+	       symb(_PAR_->buf[_PAR_->pos + _PAR_->off]), \
+	       _PAR_->pos,                                \
+	       _PAR_->len,                                \
+	       _PAR_->off,                                \
+	       __func__);                                 \
 } while(0)
 
 #else
@@ -37,132 +58,218 @@ FSM_STATE(exit_star_detected,      myfsm);
 
 #endif
 
-
-static inline void stack(struct parser *myparser, char c)
+static inline void skip(struct parser *par)
 {
-	if (myparser->size < TU_MAX_LEN)
-		myparser->out_buf[myparser->size++] = c;
-	else
-		exit(EXIT_FAILURE);
+	for (int i = 0 ; i < par->off ; i++)
+		printf("%c", par->buf[par->pos + i]);
+	printf("\n");
+
+	memmove(par->buf + par->pos,
+		par->buf + par->pos + par->off,
+		par->len - par->pos - par->off);
+
+	par->len -= par->off;
+	par->off  = 0;
 }
 
 FSM_STATE(in_normal_mode, myfsm)
 {
-	struct parser *myparser = container_of(myfsm, struct parser, operator);
-	char c = fgetc(myparser->f);
+	struct parser *par = container_of(myfsm, struct parser, operator);
 
-	LOG_STATE(myparser);
+	LOG_STATE(par);
 
-	switch (c) {
-		case EOF : FSM_STOP(myfsm);
-		case '/' : FSM_NEXT(myfsm, entering_slash_detected);
-		default  : stack(myparser, c);
-			   FSM_NEXT(myfsm, in_normal_mode);
+	if (par->pos >= par->len)
+		FSM_STOP(myfsm);
+
+	switch (par->buf[par->pos + par->off]) {
+		case EOF : 
+			FSM_STOP(myfsm);
+		case '/' :
+			par->off += 1;
+			FSM_NEXT(myfsm, entering_slash_detected);
+		default :
+			par->pos += 1;
+			//FSM_NEXT(myfsm, in_normal_mode);
 	}
 }
-
 
 FSM_STATE(entering_slash_detected, myfsm)
 {
-	struct parser *myparser = container_of(myfsm, struct parser, operator);
-	char c = fgetc(myparser->f);
+	struct parser *par = container_of(myfsm, struct parser, operator);
 
-	LOG_STATE(myparser);
-	switch (c) {
-		case EOF : FSM_STOP(myfsm);
-		case '/' : FSM_NEXT(myfsm, in_line_comment);
-		case '*' : FSM_NEXT(myfsm, in_block_comment);
-		default  : stack(myparser, '/');
-			   stack(myparser, c);
-	}	FSM_NEXT(myfsm, in_normal_mode);
-}
+	LOG_STATE(par);
 
+	if (par->pos >= par->len)
+		FSM_STOP(myfsm);
 
-FSM_STATE(in_line_comment, myfsm)
-{
-	struct parser *myparser = container_of(myfsm, struct parser, operator);
-	char c = fgetc(myparser->f);
-
-	LOG_STATE(myparser);
-
-	switch (c) {
-		case EOF  : FSM_STOP(myfsm);
-		case '\r' : stack(myparser, '\n');
-			    FSM_NEXT(myfsm, in_normal_mode);
-		case '\n' : stack(myparser, c);
-			    FSM_NEXT(myfsm, in_normal_mode);
-		default   : FSM_NEXT(myfsm, in_line_comment);
+	switch (par->buf[par->pos + par->off]) {
+		case EOF :
+			par->off -= 1;
+			FSM_STOP(myfsm);
+		case '/' :
+			par->off += 1;
+			FSM_NEXT(myfsm, in_line_comment);
+		case '*' :
+			par->off += 1;
+			FSM_NEXT(myfsm, in_block_comment);
+		default  :
+			par->off -= 1;
+			par->pos += 2;
+			FSM_NEXT(myfsm, in_normal_mode);
 	}
 }
 
+FSM_STATE(in_line_comment, myfsm)
+{
+	struct parser *par = container_of(myfsm, struct parser, operator);
+
+	LOG_STATE(par);
+
+	if (par->pos >= par->len)
+		FSM_STOP(myfsm);
+
+	switch (par->buf[par->pos + par->off]) {
+		case EOF :
+			skip(par);
+			FSM_STOP(myfsm);
+		case '\r' :
+		case '\n' :
+			skip(par);
+			par->pos += 1;
+			FSM_NEXT(myfsm, in_normal_mode);
+		default   :
+			par->off += 1;
+			//FSM_NEXT(myfsm, in_line_comment);
+	}
+}
 
 FSM_STATE(in_block_comment, myfsm)
 {
-	struct parser *myparser = container_of(myfsm, struct parser, operator);
-	char c = fgetc(myparser->f);
+	struct parser *par = container_of(myfsm, struct parser, operator);
 
-	LOG_STATE(myparser);
+	LOG_STATE(par);
 
-	switch (c) {
-		case EOF : FSM_STOP(myfsm);
-		case '*' : FSM_NEXT(myfsm, exit_star_detected);
-		default  : FSM_NEXT(myfsm, in_block_comment);
+	if (par->pos >= par->len)
+		FSM_STOP(myfsm);
+
+	switch (par->buf[par->pos + par->off]) {
+		case EOF :
+			FSM_STOP(myfsm);
+		case '*' :
+			par->off += 1;
+			FSM_NEXT(myfsm, exit_star_detected);
+		default  :
+			par->off += 1;
+			//FSM_NEXT(myfsm, in_block_comment);
 	}
 }
 
 
 FSM_STATE(exit_star_detected, myfsm)
 {
-	struct parser *myparser = container_of(myfsm, struct parser, operator);
-	char c = fgetc(myparser->f);
+	struct parser *par = container_of(myfsm, struct parser, operator);
 
-	LOG_STATE(myparser);
+	LOG_STATE(par);
 
-	switch (c) {
-		case EOF : FSM_STOP(myfsm);
-		case '*' : FSM_NEXT(myfsm, exit_star_detected);
-		case '/' : FSM_NEXT(myfsm, in_normal_mode);
-		default  : FSM_NEXT(myfsm, in_block_comment);
+	if (par->pos >= par->len)
+		FSM_STOP(myfsm);
+
+	switch (par->buf[par->pos + par->off]) {
+		case EOF :
+			FSM_STOP(myfsm);
+		case '*' :
+			par->off += 1;
+			FSM_NEXT(myfsm, exit_star_detected);
+		case '/' :
+			par->off += 1;
+			skip(par);
+			par->pos += 1;
+			FSM_NEXT(myfsm, in_normal_mode);
+		default  :
+			par->off += 1;
+			FSM_NEXT(myfsm, in_block_comment);
 	}
 }
 
-unsigned int comment(FILE *f, char *out_buf)
+
+unsigned int comment(char *buf, unsigned int len)
 {
-	struct parser myparser = {f, out_buf, 0};
+	struct parser par = {buf, 0, len, 0};
 
-	FSM_RUN(&myparser.operator, in_normal_mode);
+	FSM_RUN(&par.operator, in_normal_mode);
 
-	return myparser.size;
+	return par.pos;
 }
+
 
 #ifdef TEST_COMMENT
 
 int main(int argc, char *argv[])
 {
-	FILE *f;
-	unsigned int i, ret;
-	char mybuf[TU_MAX_LEN];
+	long int fd;
+	int i, ret;
+	struct stat stat_buf;
+	char *mem;
 
-	if (argc < 2)
-		return 1;
+	if (argc < 2) {
+		printf("not enough arguments\n");
+		goto err;
+	}
 
-	f = fopen(argv[1], "r");
+	fd = open(argv[1], O_RDWR);
+	if (0 == fd) {
+		printf("can't open %s\n", argv[1]);
+		goto err;
+	}
 
-	if (NULL == f)
-		return 1;
+	ret = fstat(fd, &stat_buf);
+	if (ret != 0) {
+		printf("stat failed with %d\n", ret);
+		goto err;
+	} else {
+		printf("stat found length : %ld\n", stat_buf.st_size);
+	}
 
-	ret = comment(f, mybuf);
+	mem = mmap(NULL, stat_buf.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
 
-	fclose(f);
+	if (mem == MAP_FAILED) {
+		printf("Mapping Failed\n");
+		goto err;
+	}
 
-	printf("%s : %d\n", argv[1], ret);
+	ret = comment(mem, stat_buf.st_size);
 
-	for (i = 0 ; i < ret ; i++)
-		printf("%c", mybuf[i]);
-	printf("\n");
+	if (munmap(mem, stat_buf.st_size) != 0) {
+		printf("UnMapping Failed\n");
+		close(fd);
+		goto err;
+	}
 
+	if (ftruncate(fd, ret) != 0) {
+		printf("trunc failed\n");
+		close(fd);
+		goto err;
+	}
+
+	close(fd);
+
+	fd = open(argv[1], O_RDWR);
+	if (0 == fd) {
+		printf("can't open %s\n", argv[1]);
+		goto err;
+	}
+
+	ret = fstat(fd, &stat_buf);
+	if (ret != 0) {
+		printf("stat failed with %d\n", ret);
+		goto err;
+	} else {
+		printf("stat found length : %ld\n", stat_buf.st_size);
+	}
 
 	return 0;
+err :
+	return 1;
 }
 
 #endif
