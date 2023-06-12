@@ -9,7 +9,7 @@ CFLAGS+= -ggdb
 
 DEPS   = ../fsm/fsm.h ../data/list.h
 
-OBJ    = comment.o include.o preproc.o
+OBJ    = comment.o emptyline.o
 
 TARGET = $(patsubst %.o,%,$(OBJ))
 
