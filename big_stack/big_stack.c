@@ -4,8 +4,6 @@
 #include <sys/resource.h>
 
 
-#define TEST_HEAPSTACK
-
 int set_max_stacksize(void)
 {
 	struct rlimit rl;
@@ -36,7 +34,7 @@ int set_max_stacksize(void)
 }
 
 
-#ifdef TEST_HEAPSTACK
+#ifdef TEST_BIG_STACK
 struct data {
 	unsigned char field[0x3FFFFFFDF];
 };
