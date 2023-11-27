@@ -4,183 +4,197 @@ https://www.programmingalgorithms.com/algorithm/smooth-sort/c/
 */
 #include "stdio.h"
 
-/*****************************************************************************/
-#define UP(IA,IB) temp = IA; IA += IB + 1; IB = temp;
-#define DOWN(IA,IB) temp = IB; IB = IA - IB - 1; IA = temp;
+#define SWAP(_A_,_B_) swap(&_A_, &_B_)
+#define UP(_X_,_Y_) {SWAP(_X_, _Y_); _X_ += _Y_ + 1;}
+#define DOWN(_X_,_Y_) {SWAP(_X_, _Y_); _X_ -= _Y_ + 1;}
+
+struct indexes {
+	unsigned long int q;
+	unsigned long int r;
+	unsigned long int p;
+	unsigned long int b;
+	unsigned long int c;
+	unsigned long int r1;
+	unsigned long int b1;
+	unsigned long int c1;
+};
 
 struct smoothie {
-	int q;
-	int r;
-	int p;
-	int b;
-	int c;
-	int r1;
-	int b1;
-	int c1;
-} s = {1, 0, 1, 1, 1, 0, 0, 0};
-
-int data[] = {654, 456, 456541, 54, 6541};
+	struct indexes  *ind;
+	unsigned long int *data;
+	unsigned long int nitems;
+};
 
 /*****************************************************************************/
-void sift()
+static inline void swap(unsigned long int *a, unsigned long int *b)
 {
-	int r0, r2, temp;
-	int t;
-	r0 = s.r1;
-	t = data[r0];
-
-	while (s.b1 >= 3) {
-		r2 = s.r1 - s.b1 + s.c1;
-
-		if (data[s.r1 - 1] > data[r2]) {
-			r2 = s.r1 - 1;
-			DOWN(s.b1, s.c1);
-		}
-
-		if (data[r2] > t) {
-			data[s.r1] = data[r2];
-			s.r1 = r2;
-			DOWN(s.b1, s.c1);
-		} else {
-
-			s.b1 = 1;
-		}
-	}
-
-	if (s.r1 - r0)
-		data[s.r1] = t;
+	unsigned long int s = *b;
+	*b = *a;
+	*a = s;
 }
 
 /*****************************************************************************/
-void trinkle()
+void sift(struct smoothie *s)
 {
-	int p1, r2, r3, r0, temp;
+	int r0, r2;
 	int t;
-	p1 = s.p;
-	s.b1 = s.b;
-	s.c1 = s.c;
-	r0 = s.r1;
-	t = data[r0];
+	r0 = s->ind->r1;
+	t = s->data[r0];
+
+	while (s->ind->b1 >= 3) {
+		r2 = s->ind->r1 - s->ind->b1 + s->ind->c1;
+
+		if (s->data[s->ind->r1 - 1] > s->data[r2]) {
+			r2 = s->ind->r1 - 1;
+			DOWN(s->ind->b1, s->ind->c1);
+		}
+
+		if (s->data[r2] > t) {
+			s->data[s->ind->r1] = s->data[r2];
+			s->ind->r1 = r2;
+			DOWN(s->ind->b1, s->ind->c1);
+		} else {
+
+			s->ind->b1 = 1;
+		}
+	}
+
+	if (s->ind->r1 - r0)
+		s->data[s->ind->r1] = t;
+}
+
+/*****************************************************************************/
+void trinkle(struct smoothie *s)
+{
+	int p1, r2, r3, r0;
+	int t;
+	p1 = s->ind->p;
+	s->ind->b1 = s->ind->b;
+	s->ind->c1 = s->ind->c;
+	r0 = s->ind->r1;
+	t = s->data[r0];
 
 	while (p1 > 0) {
 		while ((p1 & 1) == 0) {
 			p1 >>= 1;
-			UP(s.b1, s.c1)
+			UP(s->ind->b1, s->ind->c1);
 		}
 
-		r3 = s.r1 - s.b1;
+		r3 = s->ind->r1 - s->ind->b1;
 
-		if ((p1 == 1) || (data[r3] <= t)) {
+		if ((p1 == 1) || (s->data[r3] <= t)) {
 			p1 = 0;
 		} else {
 			--p1;
-			if (s.b1 == 1) {
-				data[s.r1] = data[r3];
-				s.r1 = r3;
+			if (s->ind->b1 == 1) {
+				s->data[s->ind->r1] = s->data[r3];
+				s->ind->r1 = r3;
 			} else {
-				if (s.b1 >= 3) {
-					r2 = s.r1 - s.b1 + s.c1;
+				if (s->ind->b1 >= 3) {
+					r2 = s->ind->r1 - s->ind->b1 + s->ind->c1;
 
-					if (data[s.r1 - 1] > data[r2]) {
-						r2 = s.r1 - 1;
-						DOWN(s.b1, s.c1);
+					if (s->data[s->ind->r1 - 1] > s->data[r2]) {
+						r2 = s->ind->r1 - 1;
+						DOWN(s->ind->b1, s->ind->c1);
 						p1 <<= 1;
 					}
-					if (data[r2] > data[r3]) {
-						data[s.r1] = data[r2];
-						s.r1 = r2;
-						DOWN(s.b1, s.c1);
+					if (s->data[r2] > s->data[r3]) {
+						s->data[s->ind->r1] = s->data[r2];
+						s->ind->r1 = r2;
+						DOWN(s->ind->b1, s->ind->c1);
 						p1 = 0;
 					} else {
-						data[s.r1] = data[r3]; s.r1 = r3;
+						s->data[s->ind->r1] = s->data[r3]; s->ind->r1 = r3;
 					}
 				}
 			}
 		}
 	}
 
-	if (r0 - s.r1)
-		data[s.r1] = t;
+	if (r0 - s->ind->r1)
+		s->data[s->ind->r1] = t;
 
-	sift();
+	sift(s);
 }
 
 /*****************************************************************************/
-void semi_trinkle()
+void semi_trinkle(struct smoothie *s)
 {
 	int t;
-	s.r1 = s.r - s.c;
+	s->ind->r1 = s->ind->r - s->ind->c;
 
-	if (data[s.r1] > data[s.r]) {
-		t = data[s.r];
-		data[s.r] = data[s.r1];
-		data[s.r1] = t;
-		trinkle();
+	if (s->data[s->ind->r1] > s->data[s->ind->r]) {
+		t = s->data[s->ind->r];
+		s->data[s->ind->r] = s->data[s->ind->r1];
+		s->data[s->ind->r1] = t;
+		trinkle(s);
 	}
 }
 
-void smoothsort(int N)
+/*****************************************************************************/
+void smoothsort(unsigned long int *data, unsigned long int nitems)
 {
-	int temp;
+	struct indexes ind = {1, 0, 1, 1, 1, 0, 0, 0};
+	struct smoothie s = {&ind, data, nitems};
 
-	while (s.q < N) {
-		s.r1 = s.r;
-		if ((s.p & 7) == 3) {
-			s.b1 = s.b;
-			s.c1 = s.c;
-			sift();
-			s.p = (s.p + 1) >> 2;
-			UP(s.b, s.c);
-			UP(s.b, s.c);
-		} else if ((s.p & 3) == 1) {
-			if (s.q + s.c < N) {
-				s.b1 = s.b;
-				s.c1 = s.c;
-				sift();
+	while (s.ind->q < nitems) {
+		s.ind->r1 = s.ind->r;
+		if ((s.ind->p & 7) == 3) {
+			s.ind->b1 = s.ind->b;
+			s.ind->c1 = s.ind->c;
+			sift(&s);
+			s.ind->p = (s.ind->p + 1) >> 2;
+			UP(s.ind->b, s.ind->c);
+			UP(s.ind->b, s.ind->c);
+		} else if ((s.ind->p & 3) == 1) {
+			if (s.ind->q + s.ind->c < nitems) {
+				s.ind->b1 = s.ind->b;
+				s.ind->c1 = s.ind->c;
+				sift(&s);
 			} else {
-				trinkle();
+				trinkle(&s);
 			}
 
-			DOWN(s.b, s.c);
-			s.p <<= 1;
+			DOWN(s.ind->b, s.ind->c);
+			s.ind->p <<= 1;
 
-			while (s.b > 1) {
-				DOWN(s.b, s.c);
-				s.p <<= 1;
+			while (s.ind->b > 1) {
+				DOWN(s.ind->b, s.ind->c);
+				s.ind->p <<= 1;
 			}
-			s.p++;
+			s.ind->p++;
 		}
-		s.q++;
-		s.r++;
+		s.ind->q++;
+		s.ind->r++;
 	}
 
-	s.r1 = s.r;
-	trinkle();
+	s.ind->r1 = s.ind->r;
+	trinkle(&s);
 
-	while (s.q > 1) {
-		--s.q;
+	while (s.ind->q > 1) {
+		--s.ind->q;
 
-		if (s.b == 1) {
-			s.r--;
-			s.p--;
+		if (s.ind->b == 1) {
+			s.ind->r--;
+			s.ind->p--;
 
-			while ((s.p & 1) == 0) {
-				s.p >>= 1;
-				UP(s.b, s.c);
+			while ((s.ind->p & 1) == 0) {
+				s.ind->p >>= 1;
+				UP(s.ind->b, s.ind->c);
 			}
 		} else {
-			if (s.b >= 3) {
-				s.p--;
-				s.r = s.r - s.b + s.c;
-				if (s.p > 0)
-					semi_trinkle();
+			if (s.ind->b >= 3) {
+				s.ind->p--;
+				s.ind->r = s.ind->r - s.ind->b + s.ind->c;
+				if (s.ind->p > 0)
+					semi_trinkle(&s);
 
-				DOWN(s.b, s.c);
-				s.p = (s.p << 1) + 1;
-				s.r = s.r + s.c;
-				semi_trinkle();
-				DOWN(s.b, s.c);
-				s.p = (s.p << 1) + 1;
+				DOWN(s.ind->b, s.ind->c);
+				s.ind->p = (s.ind->p << 1) + 1;
+				s.ind->r = s.ind->r + s.ind->c;
+				semi_trinkle(&s);
+				DOWN(s.ind->b, s.ind->c);
+				s.ind->p = (s.ind->p << 1) + 1;
 			}
 		}
 	}
@@ -190,8 +204,9 @@ void smoothsort(int N)
 /*****************************************************************************/
 int main(int argc, char *argv[])
 {
-	smoothsort(5);
+	unsigned long int data[] = {654, 456, 456541, 54, 6541};
+	smoothsort(data, 5);
 
 	for (int i = 0 ; i < 5 ; i++)
-		printf("%d\n", data[i]);
+		printf("%lu\n", data[i]);
 }
