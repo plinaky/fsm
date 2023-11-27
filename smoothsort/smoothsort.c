@@ -4,9 +4,20 @@ https://www.programmingalgorithms.com/algorithm/smooth-sort/c/
 */
 #include "stdio.h"
 
-#define SWAP(_A_,_B_) swap(&_A_, &_B_)
-#define UP(_X_,_Y_) {SWAP(_X_, _Y_); _X_ += _Y_ + 1;}
-#define DOWN(_X_,_Y_) {SWAP(_X_, _Y_); _X_ -= _Y_ + 1;}
+static inline void UP(unsigned long int *a, unsigned long int*b)
+{
+	unsigned long int temp = *a;
+	*a += *b + 1;
+	*b = temp;
+}
+
+static inline void DOWN(unsigned long int *a, unsigned long int*b)
+{
+	unsigned long int temp = *b;
+	*b = *a - *b - 1;
+	*a = temp;
+}
+
 
 struct indexes {
 	unsigned long int q;
@@ -46,13 +57,13 @@ void sift(struct smoothie *s)
 
 		if (s->data[s->ind->r1 - 1] > s->data[r2]) {
 			r2 = s->ind->r1 - 1;
-			DOWN(s->ind->b1, s->ind->c1);
+			DOWN(&s->ind->b1, &s->ind->c1);
 		}
 
 		if (s->data[r2] > t) {
 			s->data[s->ind->r1] = s->data[r2];
 			s->ind->r1 = r2;
-			DOWN(s->ind->b1, s->ind->c1);
+			DOWN(&s->ind->b1, &s->ind->c1);
 		} else {
 
 			s->ind->b1 = 1;
@@ -77,7 +88,7 @@ void trinkle(struct smoothie *s)
 	while (p1 > 0) {
 		while ((p1 & 1) == 0) {
 			p1 >>= 1;
-			UP(s->ind->b1, s->ind->c1);
+			UP(&s->ind->b1, &s->ind->c1);
 		}
 
 		r3 = s->ind->r1 - s->ind->b1;
@@ -95,13 +106,13 @@ void trinkle(struct smoothie *s)
 
 					if (s->data[s->ind->r1 - 1] > s->data[r2]) {
 						r2 = s->ind->r1 - 1;
-						DOWN(s->ind->b1, s->ind->c1);
+						DOWN(&s->ind->b1, &s->ind->c1);
 						p1 <<= 1;
 					}
 					if (s->data[r2] > s->data[r3]) {
 						s->data[s->ind->r1] = s->data[r2];
 						s->ind->r1 = r2;
-						DOWN(s->ind->b1, s->ind->c1);
+						DOWN(&s->ind->b1, &s->ind->c1);
 						p1 = 0;
 					} else {
 						s->data[s->ind->r1] = s->data[r3]; s->ind->r1 = r3;
@@ -144,8 +155,8 @@ void smoothsort(unsigned long int *data, unsigned long int nitems)
 			s.ind->c1 = s.ind->c;
 			sift(&s);
 			s.ind->p = (s.ind->p + 1) >> 2;
-			UP(s.ind->b, s.ind->c);
-			UP(s.ind->b, s.ind->c);
+			UP(&s.ind->b, &s.ind->c);
+			UP(&s.ind->b, &s.ind->c);
 		} else if ((s.ind->p & 3) == 1) {
 			if (s.ind->q + s.ind->c < nitems) {
 				s.ind->b1 = s.ind->b;
@@ -155,11 +166,11 @@ void smoothsort(unsigned long int *data, unsigned long int nitems)
 				trinkle(&s);
 			}
 
-			DOWN(s.ind->b, s.ind->c);
+			DOWN(&s.ind->b, &s.ind->c);
 			s.ind->p <<= 1;
 
 			while (s.ind->b > 1) {
-				DOWN(s.ind->b, s.ind->c);
+				DOWN(&s.ind->b, &s.ind->c);
 				s.ind->p <<= 1;
 			}
 			s.ind->p++;
@@ -180,7 +191,7 @@ void smoothsort(unsigned long int *data, unsigned long int nitems)
 
 			while ((s.ind->p & 1) == 0) {
 				s.ind->p >>= 1;
-				UP(s.ind->b, s.ind->c);
+				UP(&s.ind->b, &s.ind->c);
 			}
 		} else {
 			if (s.ind->b >= 3) {
@@ -189,11 +200,11 @@ void smoothsort(unsigned long int *data, unsigned long int nitems)
 				if (s.ind->p > 0)
 					semi_trinkle(&s);
 
-				DOWN(s.ind->b, s.ind->c);
+				DOWN(&s.ind->b, &s.ind->c);
 				s.ind->p = (s.ind->p << 1) + 1;
 				s.ind->r = s.ind->r + s.ind->c;
 				semi_trinkle(&s);
-				DOWN(s.ind->b, s.ind->c);
+				DOWN(&s.ind->b, &s.ind->c);
 				s.ind->p = (s.ind->p << 1) + 1;
 			}
 		}
