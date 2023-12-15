@@ -1,58 +1,30 @@
-#include <unistd.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <sys/resource.h>
+#include <string.h>
 
+#define MAX 1000ul
+static unsigned int arr[MAX];
 
-int set_max_stacksize(void)
+void myFunction(unsigned int size)
 {
-	struct rlimit rl;
-	int res;
-	static unsigned int once = 0;
+	unsigned int my_arr[size];
 
-	if (once) {
-		printf("stack size already increased\n");
-		return res;
+	for (unsigned int i = 0; i < size; i++) {
+		my_arr[i] = i;
 	}
-
-	res = getrlimit(RLIMIT_STACK, &rl);
-
-	if (0 != res) {
-		printf("getrlimit returned result = %d\n", res);
-		return res;
-	}
-
-	rl.rlim_cur = rl.rlim_max;
-	res = setrlimit(RLIMIT_STACK, &rl);
-
-	if (0 != res)
-		printf("setrlimit returned result = %d\n", res);
-	else
-		once = 1;
-
-	return res;
-}
-
-
-#ifdef TEST_BIG_STACK
-struct data {
-	unsigned char field[0x3FFFFFFDF];
-};
-
-static void recurse();
-
-static void recurse()
-{
-	struct data d;
-
-	printf("%p\n", (void *)&d);
-	recurse();
+	memcpy(arr + size / 2,  my_arr, (size_t)size);
 }
 
 int main(void)
 {
-	set_max_stacksize();
-	recurse();
+	unsigned int i;
+
+	for (i = 0; i < 20; i++)
+		myFunction(20 * i);
+
+	for (i = 0; i < MAX; i++)
+		printf("%ud ", arr[i]);
+
+	printf("\n");
+
 	return 0;
 }
-#endif
