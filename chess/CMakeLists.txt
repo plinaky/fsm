@@ -8,6 +8,7 @@ target_compile_definitions(chess PRIVATE TEST_CHESS)
 
 set(CMAKE_GENERATOR "Ninja")
 set(CMAKE_C_COMPILER "clang")
+#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g")
 
 
 # It is composed of 1 header
