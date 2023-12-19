@@ -28,18 +28,14 @@ enum castle {
 } __attribute__((packed));
 
 struct piece {
-    enum color   col : 1;  /* 1 bit  */
-    enum kind    fig : 3;  /* 3 bits */
+    enum color   col : 1;
+    enum kind    fig : 3;
 } __attribute__((packed));
 
 struct square {
     uint8_t line : 3;  /* 3 bits */
     uint8_t col  : 3;  /* 3 bits */
 } __attribute__((packed));
-
-/* 
- * a move list is a list of squares
- * */
 
 struct position {
     uint8_t A1 : 4; uint8_t B1 : 4; uint8_t C1 : 4; uint8_t D1 : 4; uint8_t E1 : 4; uint8_t F1 : 4; uint8_t G1 : 4; uint8_t H1 : 4; 
@@ -53,24 +49,12 @@ struct position {
 } __attribute__((packed));
 
 #define MOVE_SIZE 256
+
 struct game {
 	struct position pos;
 	uint64_t moves[MOVE_SIZE];
 	enum color turn;
 };
-
-#define BITS_PER_SQUARE 6
-
-void set_square(int index, struct square value)
-{
-    int bit_offset = index * BITS_PER_SQUARE;
-    int byte_index = bit_offset / 8;
-    int bit_shift = bit_offset % 8;
-
-    /* Insérer les nouvelles valeurs */
-    buffer[byte_index] |= (value.line << bit_shift);
-    buffer[byte_index + 1] |= (value.col << (bit_shift + 3));
-}
 
 static void mem_set(uint8_t *buf, const uint8_t len, const uint64_t pos, const uint8_t val)
 {
@@ -78,19 +62,15 @@ static void mem_set(uint8_t *buf, const uint8_t len, const uint64_t pos, const u
 	uint64_t byte_index = bit_offset / 8;
 	uint8_t  bit_mask   = (1 << len) - 1;
 	uint8_t  bit_shift  = bit_offset % 8;
-	uint8_t  over_shoot = len + bit_shift;
+	int8_t   over_shoot = len + bit_shift - 8;
 
-	/* Effacer les bits concernés */
-	buf[byte_index] &= (~(0b111111 << bit_shift) & 0b11111111);
+	buf[byte_index] &= ~(bit_mask << bit_shift);
+	buf[byte_index] |= val << bit_shift;
 
-	if (over_shoot > 7)
-		buf[byte_index + 1] &= ~(0b11111111 >> (8 - over_shoot));
-
-
-	/* Insérer les nouvelles valeurs */
-	buffer[byte_index] |= (value << bit_shift) & 0b11111111;
-	buffer[byte_index + 1] |= value >> (bit_shift + 3));
-
+	if (over_shoot > 0) {
+		buf[byte_index + 1] &= ~(0xff >> (8 - over_shoot));
+		buf[byte_index + 1] |= val >> (len - over_shoot);
+	}
 }
 
 static uint8_t mem_get(uint8_t *buf, const uint8_t len, const uint64_t pos)
@@ -111,10 +91,29 @@ static uint8_t mem_get(uint8_t *buf, const uint8_t len, const uint64_t pos)
 	return (uint8_t)res;
 }
 
-
-static char to_char(const struct piece *figure)
+static inline struct piece get_piece(const struct position *pos, const struct square xy)
 {
-	switch (figure->kind) {
+	uint8_t res = mem_get((uint8_t *)pos, 4, 8 * xy.line + xy.col);
+
+	return *((struct piece *)&res);
+}
+
+static void inline set_piece(struct position *pos, struct square xy, struct piece fig)
+{
+	mem_set((uint8_t *)pos, 4, 8 * xy.line + xy.col, *((uint8_t *)&fig));
+}
+
+static inline struct square my_square(uint8_t i, uint8_t j)
+{
+	struct square res = {i & 0x7, i & 0x7};
+	return res;
+}
+
+#define GET_PIECE(POS, I, J) get_piece(POS, my_square(I, J))
+
+static char to_char(const struct piece p)
+{
+	switch (p.fig) {
 		case PAWN   : return 'P';
 		case KNIGHT : return 'N';
 		case BISHOP : return 'B';
@@ -125,7 +124,7 @@ static char to_char(const struct piece *figure)
 	}
 }
 
-static void print_pos(const struct piece pos[8][8])
+static void print_pos(const struct position *pos)
 {
 	const char inv_start[] = "\x1b[7m";
 	const char inv_stop[]  = "\x1b[0m";
@@ -142,7 +141,7 @@ static void print_pos(const struct piece pos[8][8])
 			if ((i + j) % 2)
 				printf("%s", inv_start);
 
-			printf(" %c ", to_char(pos[i][j]));
+			printf(" %c ", to_char(GET_PIECE(pos, i, j)));
 
 			if ((i + j) % 2)
 				printf("%s", inv_stop);
@@ -184,20 +183,20 @@ static inline void add_king_moves(struct game *gm, unsigned int *cur, const uint
 
 static inline void add_moves(struct game *gm, unsigned int *cur, const uint8_t i, const uint8_t j)
 {
-	enum piece figure = gm->pos[i][j] & 7;
-	switch (figure) {
+	struct piece p = GET_PIECE(&gm->pos, i, j);
+	switch (p.fig) {
 		case PAWN   : 
-			add_pawn_moves(struct game *gm, unsigned int *cur, const uint8_t i, const uint8_t j);
+			add_pawn_moves(gm, cur, i, j);
 		case KNIGHT : 
-			add_knight_moves(struct game *gm, unsigned int *cur, const uint8_t i, const uint8_t j);
+			add_knight_moves(gm, cur, i, j);
 		case BISHOP : 
-			add_bishop_moves(struct game *gm, unsigned int *cur, const uint8_t i, const uint8_t j);
+			add_bishop_moves(gm, cur, i, j);
 		case ROOK   : 
-			add_rook_moves(struct game *gm, unsigned int *cur, const uint8_t i, const uint8_t j);
+			add_rook_moves(gm, cur, i, j);
 		case QUEEN  : 
-			add_queen_moves(struct game *gm, unsigned int *cur, const uint8_t i, const uint8_t j);
+			add_queen_moves(gm, cur, i, j);
 		case KING   : 
-			add_king_moves(struct game *gm, unsigned int *cur, const uint8_t i, const uint8_t j);
+			add_king_moves(gm, cur, i, j);
 	}
 }
 
@@ -215,9 +214,10 @@ static void fill_moves(struct game *gm)
 
 	for (uint8_t i = 0; i < 8; i++) {
 		for (uint8_t j = 0; j < 8; j++ ) {
-			if (gm->pos[i][j] != 0) {
+			struct piece p = GET_PIECE(&gm->pos, i, j);
+			if (p.fig != 0) {
 				add_piece(gm, &cur, i, j);
-				printf("%c %c%d\n", to_char(gm->pos[i][j]), 'a' + j, i + 1);
+				printf("%c %c%d\n", to_char(p), 'a' + j, i + 1);
 				if (cur >= MOVE_SIZE) {
 					printf("size exceeded %d\n", cur);
 					break;
@@ -232,9 +232,47 @@ int main(void)
 {
 	struct game gm;
 
-	memcpy(gm.pos, def_pos, 64);
-	print_pos(gm.pos);
-	fill_moves(&gm);
+	memset(&gm.pos, 0 , sizeof(struct position));
+
+	gm.pos.A1 = WHITE << 3 | ROOK;
+	gm.pos.B1 = WHITE << 3 | KNIGHT;
+	gm.pos.C1 = WHITE << 3 | BISHOP;
+	gm.pos.D1 = WHITE << 3 | QUEEN;
+	gm.pos.E1 = WHITE << 3 | KING;
+	gm.pos.F1 = WHITE << 3 | BISHOP;
+	gm.pos.G1 = WHITE << 3 | KNIGHT;
+	gm.pos.H1 = WHITE << 3 | ROOK;
+
+	gm.pos.A2 = WHITE << 3 | PAWN;
+	gm.pos.B2 = WHITE << 3 | PAWN;
+	gm.pos.C2 = WHITE << 3 | PAWN;
+	gm.pos.D2 = WHITE << 3 | PAWN;
+	gm.pos.E2 = WHITE << 3 | PAWN;
+	gm.pos.F2 = WHITE << 3 | PAWN;
+	gm.pos.G2 = WHITE << 3 | PAWN;
+	gm.pos.H2 = WHITE << 3 | PAWN;
+
+	gm.pos.A8 = BLACK << 3 | ROOK;
+	gm.pos.B8 = BLACK << 3 | KNIGHT;
+	gm.pos.C8 = BLACK << 3 | BISHOP;
+	gm.pos.D8 = BLACK << 3 | QUEEN;
+	gm.pos.E8 = BLACK << 3 | KING;
+	gm.pos.F8 = BLACK << 3 | BISHOP;
+	gm.pos.G8 = BLACK << 3 | KNIGHT;
+	gm.pos.H8 = BLACK << 3 | ROOK;
+
+	gm.pos.A7 = BLACK << 3 | PAWN;
+	gm.pos.B7 = BLACK << 3 | PAWN;
+	gm.pos.C7 = BLACK << 3 | PAWN;
+	gm.pos.D7 = BLACK << 3 | PAWN;
+	gm.pos.E7 = BLACK << 3 | PAWN;
+	gm.pos.F7 = BLACK << 3 | PAWN;
+	gm.pos.G7 = BLACK << 3 | PAWN;
+	gm.pos.H7 = BLACK << 3 | PAWN;
+
+
+	print_pos(&gm.pos);
+	//fill_moves(&gm);
 
 	return 0;
 }
