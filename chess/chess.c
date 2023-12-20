@@ -1,107 +1,87 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
+#include "board.h"
+#include "move.h"
 
-#define	PAWN   1
-#define KNIGHT 2
-#define BISHOP 3
-#define ROOK   4
-#define QUEEN  5
-#define KING   6
+#define NN 1;
+#define NE 2;
+#define EE 3;
+#define SE 4;
+#define SS 5;
+#define SW 6;
+#define WW 7;
+#define NW 8;
 
-#define WHITE (0 << 3)
-#define BLACK (1 << 3)
 
-#define WR (WHITE | ROOK)
-#define WN (WHITE | KNIGHT)
-#define WB (WHITE | BISHOP)
-#define WQ (WHITE | QUEEN)
-#define WK (WHITE | KING)
-#define WP (WHITE | PAWN)
-
-#define BR (BLACK | ROOK)
-#define BN (BLACK | KNIGHT)
-#define BB (BLACK | BISHOP)
-#define BQ (BLACK | QUEEN)
-#define BK (BLACK | KING)
-#define BP (BLACK | PAWN)
-
-uint8_t default_board[8][8] = {
-	{WR, WN, WB, WQ, WK, WB, WN, WR},
-	{WP, WP, WP, WP, WP, WP, WP, WP},
-	{ 0,  0,  0,  0,  0,  0,  0,  0},
-	{ 0,  0,  0,  0,  0,  0,  0,  0},
-	{ 0,  0,  0,  0,  0,  0,  0,  0},
-	{ 0,  0,  0,  0,  0,  0,  0,  0},
-	{BP, BP, BP, BP, BP, BP, BP, BP},
-	{BR, BN, BB, BQ, BK, BB, BN, BR}
-};
-
-static inline uint8_t get_piece(uint8_t board[32], uint8_t i, uint8_t j)
+int8_t aligned(uint8_t start, uint8_t stop)
 {
-	uint16_t pos = 8 * i + j;
-	return  0b1111 & (board[pos / 2] >> (4 * (j % 2)));
+	uint8_t x1 = SQI(start);
+	uint8_t y1 = SQJ(start);
+	uint8_t x2 = SQI(stop);
+	uint8_t y2 = SQJ(stop);
+	uint8_t al;
+
+	if ((x1 <  x2) && (y1 == y2)                        ) return NN;
+	if ((x1 <  x2) && (y1 <  y2) && (x1 - x2 == y2 - y1)) return NE;
+	if ((x1 == x2) && (y1 <  y2)                        ) return EE;
+	if ((x1 >  x2) && (y1 <  y2) && (x1 - x2 == y2 - y1)) return SE;
+	if ((x1 >  x2) && (y1 == y2)                        ) return SS;
+	if ((x1 >  x2) && (y1 >  y2) && (x1 - x2 == y1 - y2)) return SW;
+	if ((x1 == x2) && (y1 >  y2)                        ) return WW;
+	if ((x1 <  x2) && (y1 >  y2) && (x2 - x1 == y1 - y2)) return NW;
+
+	return 0;
 }
 
-static inline void set_piece(uint8_t board[32], uint8_t i, uint8_t j, uint8_t p)
+bool pinned(uint8_t board[32], uint8_t square)
 {
-	uint16_t pos = 8 * i + j;
+	uint8_t col, kings_square, king;
+	int8_t al, dx, dy;
 
-	board[pos / 2] &= ~(0b1111 << (4 * (j % 2)));
-	board[pos / 2] |= p << (4 * (j % 2));
-}
+	col = COL(get_piece(board, square));
+	
+	if (col)
+		king = BK;
+	else
+		king = WK;
 
+	kings_square = get_square(board, king);
 
-static char to_char(uint8_t p)
-{
-	if (p == WP) return 'P';
-	if (p == WN) return 'N';
-	if (p == WB) return 'B';
-	if (p == WR) return 'R';
-	if (p == WQ) return 'Q';
-	if (p == WK) return 'K';
+	al = aligned(square, kings_square);
 
-	if (p == BP) return 'p';
-	if (p == BN) return 'n';
-	if (p == BB) return 'b';
-	if (p == BR) return 'r';
-	if (p == BQ) return 'q';
-	if (p == BK) return 'k';
-
-	return ' ';
-}
-
-static void print_pos(uint8_t board[32])
-{
-	char inv_start[] = "\x1b[7m";
-	char inv_stop[]  = "\x1b[0m";
-
-	printf("\n\t    a   b   c   d   e   f   g   h\n");
-	printf("\t   -------------------------------\n");
-
-	for (int i = 7; i >= 0; i--) {
-
-		printf("\t%d |", i + 1);
-
-		for (int j = 0; j < 8; j++) {
-
-			if ((i + j) % 2)
-				printf("%s", inv_start);
-
-			printf(" %c ", to_char(get_piece(board, i, j)));
-
-			if ((i + j) % 2)
-				printf("%s", inv_stop);
-
-			printf("|");
-		}
-
-		printf(" %d\n", i + 1);
-		printf("\t   -------------------------------\n");
+	switch al {
+	case 0  : return false;
+	case NN : dx =  1; dy =  0; break;
+	case SS : dx = -1; dy =  0; break;
+	case EE : dx =  0; dy =  1; break;
+	case OO : dx =  0; dy = -1; break;
+	case NE : dx =  1; dy =  1; break;
+	case SO : dx = -1; dy = -1; break;
+	case NO : dx =  1; dy =  1; break;
+	case SE : dx =  -1; dy =  1; break;
 	}
 
-	printf("\t    a   b   c   d   e   f   g   h\n");
+	do {
+		square = SQUARE(SQI(square) + dx, SQI(square) + dy); 
+		fig = get_piece(board, square);
+		if ((fig != 0) && (fig != king))
+			return false;
+	} while (square != kings_square) 
+
+
 }
+
+#undef NN
+#undef SS
+#undef EE
+#undef WW
+#undef NE
+#undef SO
+#undef NO
+#undef SE
+
+
 
 int main(void)
 {
@@ -114,4 +94,4 @@ int main(void)
 	print_pos(board);
 
 	return 0;
-}
+
