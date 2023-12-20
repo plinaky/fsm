@@ -26,15 +26,24 @@
 #define BK (BLACK | KING)
 #define BP (BLACK | PAWN)
 
-#define MOVE_NBR 256
+uint8_t default_board[8][8] = {
+	{WR, WN, WB, WQ, WK, WB, WN, WR},
+	{WP, WP, WP, WP, WP, WP, WP, WP},
+	{ 0,  0,  0,  0,  0,  0,  0,  0},
+	{ 0,  0,  0,  0,  0,  0,  0,  0},
+	{ 0,  0,  0,  0,  0,  0,  0,  0},
+	{ 0,  0,  0,  0,  0,  0,  0,  0},
+	{BP, BP, BP, BP, BP, BP, BP, BP},
+	{BR, BN, BB, BQ, BK, BB, BN, BR}
+};
 
-static inline uint8_t get_piece(uint8_t *board, uint8_t i, uint8_t j)
+static inline uint8_t get_piece(uint8_t board[32], uint8_t i, uint8_t j)
 {
 	uint16_t pos = 8 * i + j;
-	return 0xf & (board[pos / 2] >> (4 * (j % 2)));
+	return  0b1111 & (board[pos / 2] >> (4 * (j % 2)));
 }
 
-static inline void set_piece(uint8_t *board, uint8_t i, uint8_t j, uint8_t p)
+static inline void set_piece(uint8_t board[32], uint8_t i, uint8_t j, uint8_t p)
 {
 	uint16_t pos = 8 * i + j;
 
@@ -45,24 +54,24 @@ static inline void set_piece(uint8_t *board, uint8_t i, uint8_t j, uint8_t p)
 
 static char to_char(uint8_t p)
 {
-	if (p == (WHITE | PAWN))   return 'P';
-	if (p == (WHITE | KNIGHT)) return 'N';
-	if (p == (WHITE | BISHOP)) return 'B';
-	if (p == (WHITE | ROOK))   return 'R';
-	if (p == (WHITE | QUEEN))  return 'Q';
-	if (p == (WHITE | KING))   return 'K';
+	if (p == WP) return 'P';
+	if (p == WN) return 'N';
+	if (p == WB) return 'B';
+	if (p == WR) return 'R';
+	if (p == WQ) return 'Q';
+	if (p == WK) return 'K';
 
-	if (p == (BLACK | PAWN))   return 'p';
-	if (p == (BLACK | KNIGHT)) return 'n';
-	if (p == (BLACK | BISHOP)) return 'b';
-	if (p == (BLACK | ROOK))   return 'r';
-	if (p == (BLACK | QUEEN))  return 'q';
-	if (p == (BLACK | KING))   return 'k';
+	if (p == BP) return 'p';
+	if (p == BN) return 'n';
+	if (p == BB) return 'b';
+	if (p == BR) return 'r';
+	if (p == BQ) return 'q';
+	if (p == BK) return 'k';
 
 	return ' ';
 }
 
-static void print_pos(uint8_t *board)
+static void print_pos(uint8_t board[32])
 {
 	char inv_start[] = "\x1b[7m";
 	char inv_stop[]  = "\x1b[0m";
@@ -98,47 +107,9 @@ int main(void)
 {
 	uint8_t board[32];
 
-	memset(board, 0 , 32);
-
-	set_piece(board, 0, 0, WR);
-	set_piece(board, 0, 1, WN);
-	set_piece(board, 0, 2, WB);
-	set_piece(board, 0, 3, WQ);
-                            
-	set_piece(board, 0, 4, WK);
-	set_piece(board, 0, 5, WB);
-	set_piece(board, 0, 6, WN);
-	set_piece(board, 0, 7, WR);
-                            
-	set_piece(board, 1, 0, WP);
-	set_piece(board, 1, 1, WP);
-	set_piece(board, 1, 2, WP);
-	set_piece(board, 1, 3, WP);
-                            
-	set_piece(board, 1, 4, WP);
-	set_piece(board, 1, 5, WP);
-	set_piece(board, 1, 6, WP);
-	set_piece(board, 1, 7, WP);
-                            
-	set_piece(board, 7, 0, BR);
-	set_piece(board, 7, 1, BN);
-	set_piece(board, 7, 2, BB);
-	set_piece(board, 7, 3, BQ);
-                            
-	set_piece(board, 7, 4, BK);
-	set_piece(board, 7, 5, BB);
-	set_piece(board, 7, 6, BN);
-	set_piece(board, 7, 7, BR);
-                            
-	set_piece(board, 6, 0, BP);
-	set_piece(board, 6, 1, BP);
-	set_piece(board, 6, 2, BP);
-	set_piece(board, 6, 3, BP);
-                            
-	set_piece(board, 6, 4, BP);
-	set_piece(board, 6, 5, BP);
-	set_piece(board, 6, 6, BP);
-	set_piece(board, 6, 7, BP);
+	for (uint8_t i = 0; i < 8; i++)
+		for (uint8_t j = 0; j < 8; j++)
+			set_piece(board, i, j, default_board[i][j]);
 
 	print_pos(board);
 

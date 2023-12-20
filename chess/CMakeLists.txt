@@ -8,6 +8,8 @@ target_compile_definitions(chess PRIVATE TEST_CHESS)
 
 set(CMAKE_GENERATOR "Ninja")
 set(CMAKE_C_COMPILER "clang")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2")
+#set(CMAKE_BUILD_TYPE Debug)
 #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g")
 
 
