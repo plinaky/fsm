@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include "board.h"
 
+/*
 uint8_t default_board[8][8] = {
 	{WR, WN, WB, WQ, WK, WB, WN, WR},
 	{WP, WP, WP, WP, WP, WP, WP, WP},
@@ -13,56 +14,68 @@ uint8_t default_board[8][8] = {
 	{BP, BP, BP, BP, BP, BP, BP, BP},
 	{BR, BN, BB, BQ, BK, BB, BN, BR}
 };
+*/
 
-static char to_char(uint8_t fig)
+uint8_t default_board[8][8] = {
+	{WR,  0, WB, WQ, WK, WB,  0, WR},
+	{WP, WP, WP, WP, WP, WP, WP, WP},
+	{WN,  0,  0,  0,  0, WN,  0,  0},
+	{ 0, BB,  0,  0,  0,  0,  0,  0},
+	{ 0,  0,  0,  0, BP,  0,  0,  0},
+	{ 0,  0,  0,  0,  0,  0,  0,  0},
+	{BP, BP, BP, BP,  0, BP, BP, BP},
+	{BR, BN, BB, BQ, BK,  0, BN, BR}
+};
+
+char to_char(uint8_t fig)
 {
-	if (fig == WP) return 'P';
-	if (fig == WN) return 'N';
-	if (fig == WB) return 'B';
-	if (fig == WR) return 'R';
-	if (fig == WQ) return 'Q';
-	if (fig == WK) return 'K';
+	if (fig == WP) return 'p';
+	if (fig == WN) return 'n';
+	if (fig == WB) return 'b';
+	if (fig == WR) return 'r';
+	if (fig == WQ) return 'q';
+	if (fig == WK) return 'k';
 
-	if (fig == BP) return 'p';
-	if (fig == BN) return 'n';
-	if (fig == BB) return 'b';
-	if (fig == BR) return 'r';
-	if (fig == BQ) return 'q';
-	if (fig == BK) return 'k';
+	if (fig == BP) return 'P';
+	if (fig == BN) return 'N';
+	if (fig == BB) return 'B';
+	if (fig == BR) return 'R';
+	if (fig == BQ) return 'Q';
+	if (fig == BK) return 'K';
 
 	return ' ';
 }
 
 uint8_t get_piece(uint8_t board[32], uint8_t square)
 {
-	uint16_t i = ISQ(square);
-	uint16_t j = JSQ(square);
+	uint16_t i = SQI(square);
+	uint16_t j = SQJ(square);
 	uint16_t pos = 8 * i + j;
 	return  0xf & (board[pos / 2] >> (4 * (j % 2)));
 }
 
 void set_piece(uint8_t board[32], uint8_t square, uint8_t fig)
 {
-	uint16_t i = ISQ(square);
-	uint16_t j = JSQ(square);
+	uint16_t i = SQI(square);
+	uint16_t j = SQJ(square);
 	uint16_t pos = 8 * i + j;
 
 	board[pos / 2] &= ~(0xf << (4 * (j % 2)));
 	board[pos / 2] |= fig << (4 * (j % 2));
 }
 
-uint8_t square get_square(uint8_t board[32], uint8_t fig)
+uint8_t get_square(uint8_t board[32], uint8_t fig)
 {
 	if (COL(fig) == WHITE) {
-		for (int8_t i = start; i < 8; i++)
+		for (int8_t i = 0; i < 8; i++)
 			for (int8_t j = 0; j < 8; j++)
-				if (get_piece(board, i, j) == fig)
+				if (GET_PIECE(board, i, j) == fig)
 					return SQUARE(i, j);
 		printf("%c not found", to_char(fig));
 	} else {
 		for (int8_t i = 7; i >= 0; i--)
 			for (int8_t j = 7; j >= 0; j--)
-				if (get_piece(board, i, j) == fig)
+				if (GET_PIECE(board, i, j) == fig)
 					return SQUARE(i, j);
 		printf("%c not found", to_char(fig));
 	}
@@ -87,7 +100,7 @@ void print_pos(uint8_t board[32])
 			if ((i + j) % 2)
 				printf("%s", inv_start);
 
-			printf(" %c ", to_char(get_piece(board, i, j)));
+			printf(" %c ", to_char(GET_PIECE(board, i, j)));
 
 			if ((i + j) % 2)
 				printf("%s", inv_stop);
