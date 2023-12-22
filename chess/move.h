@@ -3,6 +3,11 @@
 
 struct game {
     uint8_t board[32];
+    uint8_t turn : 1;
+    uint8_t castle : 4;
+    uint8_t en_passant : 4;
+    uint8_t half_moves;
+    uint8_t full_moves;
     uint8_t *moves;
     uint8_t len;
 };

@@ -29,19 +29,19 @@ uint8_t default_board[8][8] = {
 
 char to_char(uint8_t fig)
 {
-	if (fig == WP) return 'p';
-	if (fig == WN) return 'n';
-	if (fig == WB) return 'b';
-	if (fig == WR) return 'r';
-	if (fig == WQ) return 'q';
-	if (fig == WK) return 'k';
+	if (fig == WP) return 'P';
+	if (fig == WN) return 'N';
+	if (fig == WB) return 'B';
+	if (fig == WR) return 'R';
+	if (fig == WQ) return 'Q';
+	if (fig == WK) return 'K';
 
-	if (fig == BP) return 'P';
-	if (fig == BN) return 'N';
-	if (fig == BB) return 'B';
-	if (fig == BR) return 'R';
-	if (fig == BQ) return 'Q';
-	if (fig == BK) return 'K';
+	if (fig == BP) return 'p';
+	if (fig == BN) return 'n';
+	if (fig == BB) return 'b';
+	if (fig == BR) return 'r';
+	if (fig == BQ) return 'q';
+	if (fig == BK) return 'k';
 
 	return ' ';
 }
