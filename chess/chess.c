@@ -16,7 +16,7 @@ int main(void)
 
 	print_pos(board);
 
-	for (uint8_t i = 0; i < 8; i++)
+	for (uint8_t i = 0; i < 8; i++) {
 		for (uint8_t j = 0; j < 8; j++) {
 			square = SQUARE(i, j);
 			fig = get_piece(board, square);
@@ -25,6 +25,9 @@ int main(void)
 					printf("%c in %c%d : is pinned \n", to_char(fig), 'a' + SQJ(square), 1 + SQI(square));
 			}
 		}
+	}
+
+	check();
 
 
 	return 0;

@@ -3,7 +3,6 @@
 
 #include <stdbool.h>
 
-}
 struct game {
     uint32_t *moves;
     uint32_t board[8];
@@ -42,6 +41,7 @@ struct game {
 uint16_t get_move(uint32_t *moves, uint16_t pos);
 void set_move(uint32_t *moves, uint16_t pos, uint16_t move);
 bool pinned(uint8_t board[32], uint8_t figs_square);
+void check(void);
 bool is_legal(struct game*, uint16_t move);
 
 #endif
