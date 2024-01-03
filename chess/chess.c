@@ -7,28 +7,41 @@
 
 int main(void)
 {
-	uint8_t board[32];
-	uint8_t square, fig;
+	uint8_t square, fig, count, i, j, k;
+	struct game gm;
 
-	for (uint8_t i = 0; i < 8; i++)
-		for (uint8_t j = 0; j < 8; j++)
-			set_piece(board, SQUARE(i, j), default_board[i][j]);
+	for (i = 0; i < 8; i++)
+		for (j = 0; j < 8; j++)
+			set_piece(gm.board, SQUARE(i, j), default_board[i][j]);
 
-	print_pos(board);
+	gm.turn = 0;
 
-	for (uint8_t i = 0; i < 8; i++) {
-		for (uint8_t j = 0; j < 8; j++) {
+	print_pos(gm.board);
+
+	for (i = 0; i < 8; i++) {
+		for (j = 0; j < 8; j++) {
 			square = SQUARE(i, j);
-			fig = get_piece(board, square);
+			fig = get_piece(gm.board, square);
 			if (fig) {
-				if (pinned(board, square))
+				if (pinned(gm.board, square))
 					printf("%c in %c%d : is pinned \n", to_char(fig), 'a' + SQJ(square), 1 + SQI(square));
 			}
 		}
 	}
 
-	check();
-
+	for (i = 0; i < 8; i++) {
+		for (j = 0; j < 8; j++) {
+			square = SQUARE(i, j);
+			fig = get_piece(gm.board, square);
+			if (FIG(fig) == PAWN) {
+				pawn_moves(&gm, square, &count);
+				for (k = 0; k < count; k++) {
+					print_moves(get_move(gm.moves, k));
+					printf("\n");
+				}
+			}
+		}
+	}
 
 	return 0;
 }

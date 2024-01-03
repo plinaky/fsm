@@ -5,7 +5,7 @@
 
 struct game {
     uint32_t *moves;
-    uint32_t board[8];
+    uint8_t board[32];
     uint16_t move_cnt;
     uint8_t  checks[3];
     uint8_t  castle : 4;
@@ -41,7 +41,8 @@ struct game {
 uint16_t get_move(uint32_t *moves, uint16_t pos);
 void set_move(uint32_t *moves, uint16_t pos, uint16_t move);
 bool pinned(uint8_t board[32], uint8_t figs_square);
-void check(void);
 bool is_legal(struct game*, uint16_t move);
+void pawn_moves(struct game *gm, uint8_t square, uint8_t *count);
+void print_moves(uint16_t mouv);
 
 #endif

@@ -41,6 +41,25 @@ uint16_t get_move(uint32_t *moves, uint16_t pos)
 	return (uint16_t) ((pair >> offset) & 0x0fff);
 }
 
+static inline uint16_t prepare_move_xy(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2)
+{
+	uint16_t res = 
+		(((uint16_t)y2 & 0x7) << 9) |
+		(((uint16_t)x2 & 0x7) << 6) |
+		(((uint16_t)y1 & 0x7) << 3) |
+		(((uint16_t)x1 & 0x7) << 0);
+	return res;
+}
+
+static inline uint16_t prepare_move_square(uint8_t start, uint8_t end)
+{
+	uint16_t res = 
+		(((uint16_t)end   & 0x3f) << 6) |
+		(((uint16_t)start & 0x3f) << 0);
+	return res;
+
+}
+
 void set_move(uint32_t *moves, uint16_t pos, uint16_t move)
 {
 	uint8_t  *my_moves = (uint8_t *)moves;
@@ -164,31 +183,64 @@ bool pinned(uint8_t board[32], uint8_t figs_square)
 	} while (1); /* It is safe to do so */
 }
 
-uint8_t *pawn_moves(struct game *gm, uint8_t square, uint8_t *count)
+void print_moves(uint16_t mouv)
 {
-	uint32_t res[1];
-	uint8_t figure, color;
+	printf("%c%d-%c%d ",
+	       'a' + (mouv >> 3) & 0x7,
+	        0  + (mouv >> 0) & 0x7,
+	       'a' + (mouv >> 9) & 0x7,
+	        0  + (mouv >> 6) & 0x7
+	       );
+}
+
+void pawn_moves(struct game *gm, uint8_t square, uint8_t *count)
+{
+	uint8_t figure, color, dest, take;
 	int8_t dx;
 
 	*count = 0;
 
-	figure = get_piece(board, square);
+	figure = get_piece(gm->board, square);
 
-	if (figure & (~BLACK) != PAWN)
-		return res;
+	if (FIG(figure) != PAWN)
+		return;
 
-	color = figure & BLACK;
+	color = COL(figure);
 
 	if ((color >> 3) != gm->turn)
-		return res;
+		return;
 
 	if (color)
 		dx = -1;
 	else
 		dx = 1;
 
-	if (get_piece(gm->board, SQUARE(SQI(square + dx), SQJ(square))) == 0)
-		set_move(res, 0, uint16_t move);
+	dest = SQUARE(SQI(square) + dx, SQJ(square));
+
+	if (get_piece(gm->board, dest) == 0) {
+		set_move(gm->moves, (*count)++, prepare_move_square(square, dest));
+
+		if ((1 == dx) && (1 == SQI(square)) ||
+			((-1 == dx) && (6 == SQI(square)))) {
+			dest = SQUARE(SQI(square) + 2 * dx, SQJ(square));
+			if (get_piece(gm->board, dest) == 0) 
+				set_move(gm->moves, (*count)++, prepare_move_square(square, dest));
+		}
+	}
+
+	if (SQJ(square) > 0) {
+		dest = SQUARE(SQI(square) + dx, SQJ(square) - 1);
+		take = get_piece(gm->board, dest);
+		if ((0 != take) && (COL(take) != color)) 
+			set_move(gm->moves, (*count)++, prepare_move_square(square, dest));
+	}
+
+	if (SQJ(square) < 7) {
+		dest = SQUARE(SQI(square) + dx, SQJ(square) + 1);
+		take = get_piece(gm->board, dest);
+		if ((0 != take) && (COL(take) != color)) 
+			set_move(gm->moves, (*count)++, prepare_move_square(square, dest));
+	}
 }
 
 bool is_legal(struct game* fight, uint16_t move)
