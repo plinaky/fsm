@@ -34,7 +34,7 @@ struct game {
  * +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
  * |         END 1         |       START 1         |         END 0         |       START 0         |
  * +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
- * |    ye1    |    xe1    |    ys1    |    xs1    |    ye0    |    xe0    |    ys0    |    xs0    |
+ * |    xe1    |    ye1    |    xs1    |    ys1    |    xe0    |    ye0    |    xs0    |    ys0    |
  * +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
  * */
 
@@ -43,6 +43,6 @@ void set_move(uint32_t *moves, uint16_t pos, uint16_t move);
 bool pinned(uint8_t board[32], uint8_t figs_square);
 bool is_legal(struct game*, uint16_t move);
 void pawn_moves(struct game *gm, uint8_t square, uint8_t *count);
-void print_moves(uint16_t mouv);
+void print_move(uint16_t mouv);
 
 #endif

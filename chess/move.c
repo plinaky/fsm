@@ -32,31 +32,47 @@
 		_DIR++, _DX = D_X(_DIR), _DY = D_Y(_DIR)      \
 		)
 
+void print_square(uint8_t square)
+{
+	printf("%c%d",
+	       'a' + (char)((square >> 0) & 0x7),
+	        1  + ((square >> 3) & 0x7)
+	       );
+}
+
+void print_move(uint16_t mov)
+{
+	print_square((uint8_t)mov);
+	printf("-");
+	print_square((uint8_t)(mov >> 6));
+}
+
+
 uint16_t get_move(uint32_t *moves, uint16_t pos)
 {
 	uint8_t *my_moves = (uint8_t *)moves;
 	uint32_t pair = *((uint32_t *)(my_moves + 3 * (pos / 2)));
 	uint8_t offset = 12 * (pos % 2);
 
-	return (uint16_t) ((pair >> offset) & 0x0fff);
+	return (uint16_t) ((pair >> offset) & 0xffffff);
 }
 
 static inline uint16_t prepare_move_xy(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2)
 {
-	uint16_t res = 
-		(((uint16_t)y2 & 0x7) << 9) |
-		(((uint16_t)x2 & 0x7) << 6) |
-		(((uint16_t)y1 & 0x7) << 3) |
-		(((uint16_t)x1 & 0x7) << 0);
-	return res;
+	uint16_t mov = 
+		(((uint16_t)x2 & 0x7) << 9) |
+		(((uint16_t)y2 & 0x7) << 6) |
+		(((uint16_t)x1 & 0x7) << 3) |
+		(((uint16_t)y1 & 0x7) << 0);
+	return mov;
 }
 
 static inline uint16_t prepare_move_square(uint8_t start, uint8_t end)
 {
-	uint16_t res = 
+	uint16_t mov = 
 		(((uint16_t)end   & 0x3f) << 6) |
 		(((uint16_t)start & 0x3f) << 0);
-	return res;
+	return mov;
 
 }
 
@@ -67,7 +83,7 @@ void set_move(uint32_t *moves, uint16_t pos, uint16_t move)
 	uint32_t  this_move = (uint32_t)move;
 	uint8_t   offset = 12 * (pos % 2);
 
-	*pair &= ~(0x0fff << offset);
+	*pair &= ~(0xffffff << offset);
 	*pair |= this_move << offset;
 }
 
@@ -181,16 +197,6 @@ bool pinned(uint8_t board[32], uint8_t figs_square)
 			return false;
 
 	} while (1); /* It is safe to do so */
-}
-
-void print_moves(uint16_t mouv)
-{
-	printf("%c%d-%c%d ",
-	       'a' + (mouv >> 3) & 0x7,
-	        0  + (mouv >> 0) & 0x7,
-	       'a' + (mouv >> 9) & 0x7,
-	        0  + (mouv >> 6) & 0x7
-	       );
 }
 
 void pawn_moves(struct game *gm, uint8_t square, uint8_t *count)

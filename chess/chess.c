@@ -36,9 +36,11 @@ int main(void)
 			if (FIG(fig) == PAWN) {
 				pawn_moves(&gm, square, &count);
 				for (k = 0; k < count; k++) {
-					print_moves(get_move(gm.moves, k));
-					printf("\n");
+					print_move(get_move(gm.moves, k));
+					printf(" ");
 				}
+				if (count)
+					printf("\n");
 			}
 		}
 	}
