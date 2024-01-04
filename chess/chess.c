@@ -7,7 +7,7 @@
 
 int main(void)
 {
-	uint8_t square, fig, count, i, j, k;
+	uint8_t square, fig, i, j, k;
 	struct game gm;
 
 	for (i = 0; i < 8; i++)
@@ -29,17 +29,17 @@ int main(void)
 		}
 	}
 
-	for (i = 0; i < 8; i++) {
-		for (j = 0; j < 8; j++) {
+	for (j = 0; j < 8; j++) {
+		for (i = 0; i < 8; i++) {
 			square = SQUARE(i, j);
 			fig = get_piece(gm.board, square);
 			if (FIG(fig) == PAWN) {
-				pawn_moves(&gm, square, &count);
-				for (k = 0; k < count; k++) {
+				knight_moves(&gm, square);
+				for (k = 0; k < gm.move_cnt; k++) {
 					print_move(get_move(gm.moves, k));
 					printf(" ");
 				}
-				if (count)
+				if (k)
 					printf("\n");
 			}
 		}

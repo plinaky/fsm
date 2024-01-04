@@ -42,7 +42,8 @@ uint16_t get_move(uint32_t *moves, uint16_t pos);
 void set_move(uint32_t *moves, uint16_t pos, uint16_t move);
 bool pinned(uint8_t board[32], uint8_t figs_square);
 bool is_legal(struct game*, uint16_t move);
-void pawn_moves(struct game *gm, uint8_t square, uint8_t *count);
+void pawn_moves(struct game *gm, uint8_t square);
+void knight_moves(struct game *gm, uint8_t square);
 void print_move(uint16_t mouv);
 
 #endif
