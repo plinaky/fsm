@@ -59,21 +59,16 @@ uint16_t get_move(uint32_t *moves, uint16_t pos)
 
 static inline uint16_t prepare_move_xy(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2)
 {
-	uint16_t mov = 
-		(((uint16_t)x2 & 0x7) << 9) |
+	return	(((uint16_t)x2 & 0x7) << 9) |
 		(((uint16_t)y2 & 0x7) << 6) |
 		(((uint16_t)x1 & 0x7) << 3) |
 		(((uint16_t)y1 & 0x7) << 0);
-	return mov;
 }
 
 static inline uint16_t prepare_move_square(uint8_t start, uint8_t end)
 {
-	uint16_t mov = 
-		(((uint16_t)end   & 0x3f) << 6) |
+	return  (((uint16_t)end   & 0x3f) << 6) |
 		(((uint16_t)start & 0x3f) << 0);
-	return mov;
-
 }
 
 void set_move(uint32_t *moves, uint16_t pos, uint16_t move)
@@ -224,13 +219,13 @@ void pawn_moves(struct game *gm, uint8_t square)
 	dest = SQUARE(SQI(square) + dx, SQJ(square));
 
 	if (get_piece(gm->board, dest) == 0) {
-		set_move(gm->moves, (gm->move_cnt)++, prepare_move_square(square, dest));
+		set_move(gm->moves, gm->move_cnt++, prepare_move_square(square, dest));
 
 		if ((1 == dx) && (1 == SQI(square)) ||
 			((-1 == dx) && (6 == SQI(square)))) {
 			dest = SQUARE(SQI(square) + 2 * dx, SQJ(square));
 			if (get_piece(gm->board, dest) == 0) 
-				set_move(gm->moves, (gm->move_cnt)++, prepare_move_square(square, dest));
+				set_move(gm->moves, gm->move_cnt++, prepare_move_square(square, dest));
 		}
 	}
 
@@ -238,14 +233,14 @@ void pawn_moves(struct game *gm, uint8_t square)
 		dest = SQUARE(SQI(square) + dx, SQJ(square) - 1);
 		take = get_piece(gm->board, dest);
 		if ((0 != take) && (COL(take) != color)) 
-			set_move(gm->moves, (gm->move_cnt)++, prepare_move_square(square, dest));
+			set_move(gm->moves, gm->move_cnt++, prepare_move_square(square, dest));
 	}
 
 	if (SQJ(square) < 7) {
 		dest = SQUARE(SQI(square) + dx, SQJ(square) + 1);
 		take = get_piece(gm->board, dest);
 		if ((0 != take) && (COL(take) != color)) 
-			set_move(gm->moves, (gm->move_cnt)++, prepare_move_square(square, dest));
+			set_move(gm->moves, gm->move_cnt++, prepare_move_square(square, dest));
 	}
 }
 
@@ -283,7 +278,7 @@ void knight_moves(struct game *gm, uint8_t square)
 			dest = SQUARE((uint8_t)x, (uint8_t)y);
 			take = get_piece(gm->board, dest);
 			if ((0 == take) || (COL(take) != color))
-				set_move(gm->moves, (gm->move_cnt)++, prepare_move_square(square, dest));
+				set_move(gm->moves, gm->move_cnt++, prepare_move_square(square, dest));
 		}
 	}
 }
