@@ -8,8 +8,8 @@ struct game {
     uint8_t board[32];
     uint16_t move_cnt;
     uint8_t  checks[3];
+    uint8_t  en_passant : 6; /* a square */
     uint8_t  castle : 4;
-    uint8_t  en_passant : 4;
     uint8_t  check_status : 2;
     uint8_t  turn : 1;
     uint8_t  mate : 1;

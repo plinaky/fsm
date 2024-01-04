@@ -9,14 +9,17 @@ int main(void)
 {
 	uint8_t square, fig, i, j, k;
 	struct game gm;
-	uint32_t moves[20];
+	uint32_t moves[40];
 
 	for (i = 0; i < 8; i++)
 		for (j = 0; j < 8; j++)
 			set_piece(gm.board, SQUARE(i, j), default_board[i][j]);
 
-	gm.turn = 0;
 	gm.moves = (uint32_t *)moves;
+	gm.turn = 0;
+	gm.en_passant = SQUARE(5, 2);
+	/* gm.turn = 1;
+	gm.en_passant = 0; */
 
 	print_pos(gm.board);
 
@@ -36,17 +39,18 @@ int main(void)
 			square = SQUARE(i, j);
 			fig = get_piece(gm.board, square);
 			if (fig) {
+				gm.move_cnt = 0;
 				pawn_moves(&gm, square);
 				knight_moves(&gm, square);
 				BRQ_moves(&gm, square);
+				for (k = 0; k < gm.move_cnt; k++) {
+					print_move(get_move(gm.moves, k));
+				}
+				if (k)
+					printf("\n");
 			}
 		}
 	}
-
-	for (k = 0; k < gm.move_cnt; k++) {
-		print_move(get_move(gm.moves, k));
-	}
-	printf("\n");
 
 	return 0;
 }

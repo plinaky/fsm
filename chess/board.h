@@ -28,7 +28,7 @@
 #define SQI(_square) ((uint8_t)(((_square) >> 3) & 0x7))
 #define SQJ(_square) ((uint8_t)((_square) & 0x7))
 
-#define SQUARE(_i, _j) (((_i) << 3  | (_j)) & 0x3f)
+#define SQUARE(_i, _j) ((uint8_t)(((uint8_t)(_i) << 3  | (uint8_t)(_j)) & 0x3f))
 
 #define FIG(_fig) ((_fig) & 0x7)
 #define COL(_fig) ((_fig) & 0x8)

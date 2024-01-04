@@ -18,12 +18,12 @@ uint8_t default_board[8][8] = {
 
 uint8_t default_board[8][8] = {
 	{WR,  0, WB, WQ, WK, WB,  0, WR},
-	{WP, WP, WP, WP, WP, WP, WP, WP},
+	{WP,  0, WP, WP, WP, WP, WP, WP},
 	{WN,  0,  0,  0,  0, WN,  0,  0},
 	{ 0, BB,  0,  0,  0,  0,  0,  0},
-	{ 0,  0,  0,  0, BP,  0,  0,  0},
+	{ 0, WP, BP, BP, BP, BP,  0,  0},
 	{ 0,  0,  0,  0,  0,  0,  0,  0},
-	{BP, BP, BP, BP,  0, BP, BP, BP},
+	{BP, BP,  0,  0,  0, BP, BP, BP},
 	{BR, BN, BB, BQ, BK,  0, BN, BR}
 };
 

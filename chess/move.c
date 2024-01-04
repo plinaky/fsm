@@ -207,16 +207,17 @@ void pawn_moves(struct game *gm, uint8_t square)
 
 	color = COL(figure);
 
+	if ((color >> 3) != gm->turn)
+		return;
+
 	if (color)
 		dx = -1;
 	else
 		dx = 1;
 
 	dest = SQUARE(SQI(square) + dx, SQJ(square));
-
 	if (get_piece(gm->board, dest) == 0) {
 		set_move(gm->moves, gm->move_cnt++, prepare_move_square(square, dest));
-
 		if ((1 == dx) && (1 == SQI(square)) ||
 			((-1 == dx) && (6 == SQI(square)))) {
 			dest = SQUARE(SQI(square) + 2 * dx, SQJ(square));
@@ -228,14 +229,15 @@ void pawn_moves(struct game *gm, uint8_t square)
 	if (SQJ(square) > 0) {
 		dest = SQUARE(SQI(square) + dx, SQJ(square) - 1);
 		take = get_piece(gm->board, dest);
-		if ((0 != take) && (COL(take) != color)) 
+		if (((0 != take) && (COL(take) != color)) || (dest == gm->en_passant))
 			set_move(gm->moves, gm->move_cnt++, prepare_move_square(square, dest));
+
 	}
 
 	if (SQJ(square) < 7) {
 		dest = SQUARE(SQI(square) + dx, SQJ(square) + 1);
 		take = get_piece(gm->board, dest);
-		if ((0 != take) && (COL(take) != color)) 
+		if (((0 != take) && (COL(take) != color)) || (dest == gm->en_passant))
 			set_move(gm->moves, gm->move_cnt++, prepare_move_square(square, dest));
 	}
 }
@@ -261,6 +263,9 @@ void knight_moves(struct game *gm, uint8_t square)
 		return;
 
 	color = COL(figure);
+
+	if ((color >> 3) != gm->turn)
+		return;
 
 	for (cnt = 0 ; cnt < 7 ; cnt++) {
 		x = (int8_t)SQI(square) + moves[cnt][0];
@@ -305,6 +310,9 @@ void BRQ_moves(struct game *gm, uint8_t square)
 	}
 
 	color = COL(figure);
+
+	if ((color >> 3) != gm->turn)
+		return;
 
 	for (cnt1 = start ; cnt1 < stop; cnt1++) {
 		for (cnt2 = 1 ; cnt2 < 8 ; cnt2++) {
