@@ -45,6 +45,7 @@ void print_move(uint16_t mov)
 	print_square((uint8_t)mov);
 	printf("-");
 	print_square((uint8_t)(mov >> 6));
+	printf(" ");
 }
 
 
@@ -199,17 +200,12 @@ void pawn_moves(struct game *gm, uint8_t square)
 	uint8_t figure, color, dest, take;
 	int8_t dx;
 
-	gm->move_cnt = 0;
-
 	figure = get_piece(gm->board, square);
 
 	if (FIG(figure) != PAWN)
 		return;
 
 	color = COL(figure);
-
-	if ((color >> 3) != gm->turn)
-		return;
 
 	if (color)
 		dx = -1;
@@ -256,10 +252,8 @@ void knight_moves(struct game *gm, uint8_t square)
 		{-1,  2},
 		{-1, -2},
 		{-2,  1},
-		{-2, -1},
+		{-2, -1}
 	};
-
-	gm->move_cnt = 0;
 
 	figure = get_piece(gm->board, square);
 
@@ -267,9 +261,6 @@ void knight_moves(struct game *gm, uint8_t square)
 		return;
 
 	color = COL(figure);
-
-	if ((color >> 3) != gm->turn)
-		return;
 
 	for (cnt = 0 ; cnt < 7 ; cnt++) {
 		x = (int8_t)SQI(square) + moves[cnt][0];
@@ -283,6 +274,59 @@ void knight_moves(struct game *gm, uint8_t square)
 	}
 }
 
+void BRQ_moves(struct game *gm, uint8_t square)
+{
+	uint8_t figure, color, dest, take, cnt1, cnt2, start, stop;
+	int8_t dx, dy, x, y;
+	int8_t offsets[8][2] = {
+		{ 1,  1},
+		{ 1, -1},
+		{-1, -1},
+		{-1,  1},
+		{ 0,  1},
+		{ 0, -1},
+		{-1,  0},
+		{ 1,  0}
+	};
+
+	figure = get_piece(gm->board, square);
+
+	if (FIG(figure) == BISHOP) {
+		start = 0;
+		stop  = 4;
+	} else if (FIG(figure) == ROOK) {
+		start = 4;
+		stop  = 8;
+	} else if (FIG(figure) == QUEEN) {
+		start = 0;
+		stop  = 8;
+	} else {
+		return;
+	}
+
+	color = COL(figure);
+
+	for (cnt1 = start ; cnt1 < stop; cnt1++) {
+		for (cnt2 = 1 ; cnt2 < 8 ; cnt2++) {
+			x = (int8_t)SQI(square) + cnt2 * offsets[cnt1][0];
+			y = (int8_t)SQJ(square) + cnt2 * offsets[cnt1][1];
+			if ((x >= 0) && (x <= 7) && (y >= 0) && (y <= 7)) {
+				dest = SQUARE((uint8_t)x, (uint8_t)y);
+				take = get_piece(gm->board, dest);
+				if (0 == take) {
+					set_move(gm->moves, gm->move_cnt++, prepare_move_square(square, dest));
+				} else if (COL(take) != color) {
+					set_move(gm->moves, gm->move_cnt++, prepare_move_square(square, dest));
+					break;
+				} else {
+					break;
+				}
+			} else {
+				break;
+			}
+		}
+	}
+}
 
 bool is_legal(struct game* fight, uint16_t move)
 {

@@ -35,17 +35,18 @@ int main(void)
 		for (i = 0; i < 8; i++) {
 			square = SQUARE(i, j);
 			fig = get_piece(gm.board, square);
-			if (FIG(fig) == KNIGHT) {
+			if (fig) {
+				pawn_moves(&gm, square);
 				knight_moves(&gm, square);
-				for (k = 0; k < gm.move_cnt; k++) {
-					print_move(get_move(gm.moves, k));
-					printf(" ");
-				}
-				if (k)
-					printf("\n");
+				BRQ_moves(&gm, square);
 			}
 		}
 	}
+
+	for (k = 0; k < gm.move_cnt; k++) {
+		print_move(get_move(gm.moves, k));
+	}
+	printf("\n");
 
 	return 0;
 }
