@@ -44,7 +44,8 @@ bool pinned(uint8_t board[32], uint8_t figs_square);
 bool is_legal(struct game*, uint16_t move);
 void pawn_moves(struct game *gm, uint8_t square);
 void knight_moves(struct game *gm, uint8_t square);
-void BRQ_moves(struct game *gm, uint8_t square);
+void brq_moves(struct game *gm, uint8_t square);
+void king_moves(struct game *gm, uint8_t square);
 void print_move(uint16_t mouv);
 
 #endif

@@ -16,10 +16,14 @@ int main(void)
 			set_piece(gm.board, SQUARE(i, j), default_board[i][j]);
 
 	gm.moves = (uint32_t *)moves;
+	/*	
+	*/
 	gm.turn = 0;
 	gm.en_passant = SQUARE(5, 2);
-	/* gm.turn = 1;
-	gm.en_passant = 0; */
+	/*
+	gm.turn = 1;
+	gm.en_passant = 0;
+	 */
 
 	print_pos(gm.board);
 
@@ -42,7 +46,8 @@ int main(void)
 				gm.move_cnt = 0;
 				pawn_moves(&gm, square);
 				knight_moves(&gm, square);
-				BRQ_moves(&gm, square);
+				brq_moves(&gm, square);
+				king_moves(&gm, square);
 				for (k = 0; k < gm.move_cnt; k++) {
 					print_move(get_move(gm.moves, k));
 				}

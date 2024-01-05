@@ -279,7 +279,7 @@ void knight_moves(struct game *gm, uint8_t square)
 	}
 }
 
-void BRQ_moves(struct game *gm, uint8_t square)
+void brq_moves(struct game *gm, uint8_t square)
 {
 	uint8_t figure, color, dest, take, cnt1, cnt2, start, stop;
 	int8_t dx, dy, x, y;
@@ -332,6 +332,43 @@ void BRQ_moves(struct game *gm, uint8_t square)
 			} else {
 				break;
 			}
+		}
+	}
+}
+
+void king_moves(struct game *gm, uint8_t square)
+{
+	uint8_t figure, color, dest, take, cnt;
+	int8_t dx, dy, x, y;
+	int8_t moves[8][2] = {
+		{ 1, -1},
+		{ 1,  0},
+		{ 1,  1},
+		{ 0, -1},
+		{ 0,  1},
+		{-1, -1},
+		{-1,  0},
+		{-1,  1}
+	};
+
+	figure = get_piece(gm->board, square);
+
+	if (FIG(figure) != KING)
+		return;
+
+	color = COL(figure);
+
+	if ((color >> 3) != gm->turn)
+		return;
+
+	for (cnt = 0 ; cnt < 7 ; cnt++) {
+		x = (int8_t)SQI(square) + moves[cnt][0];
+		y = (int8_t)SQJ(square) + moves[cnt][1];
+		if ((x >= 0) && (x <= 7) && (y >= 0) && (y <= 7)) {
+			dest = SQUARE((uint8_t)x, (uint8_t)y);
+			take = get_piece(gm->board, dest);
+			if ((0 == take) || (COL(take) != color))
+				set_move(gm->moves, gm->move_cnt++, prepare_move_square(square, dest));
 		}
 	}
 }
