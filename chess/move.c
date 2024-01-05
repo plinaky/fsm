@@ -195,7 +195,7 @@ bool pinned(uint8_t board[32], uint8_t figs_square)
 	} while (1); /* It is safe to do so */
 }
 
-void pawn_moves(struct game *gm, uint8_t square)
+bool pawn_moves(struct game *gm, uint8_t square)
 {
 	uint8_t figure, color, dest, take;
 	int8_t dx;
@@ -203,12 +203,12 @@ void pawn_moves(struct game *gm, uint8_t square)
 	figure = get_piece(gm->board, square);
 
 	if (FIG(figure) != PAWN)
-		return;
+		return false;
 
 	color = COL(figure);
 
 	if ((color >> 3) != gm->turn)
-		return;
+		return false;
 
 	if (color)
 		dx = -1;
@@ -229,20 +229,30 @@ void pawn_moves(struct game *gm, uint8_t square)
 	if (SQJ(square) > 0) {
 		dest = SQUARE(SQI(square) + dx, SQJ(square) - 1);
 		take = get_piece(gm->board, dest);
-		if (((0 != take) && (COL(take) != color)) || (dest == gm->en_passant))
+		if (((0 != take) && (COL(take) != color)) || (dest == gm->en_passant)) {
+			if (FIG(take) == KING)
+				return true;
 			set_move(gm->moves, gm->move_cnt++, prepare_move_square(square, dest));
+		}
 
 	}
 
 	if (SQJ(square) < 7) {
 		dest = SQUARE(SQI(square) + dx, SQJ(square) + 1);
 		take = get_piece(gm->board, dest);
-		if (((0 != take) && (COL(take) != color)) || (dest == gm->en_passant))
+		if (((0 != take) && (COL(take) != color)) || (dest == gm->en_passant)) {
+			if (FIG(take) == KING)
+				return true;
 			set_move(gm->moves, gm->move_cnt++, prepare_move_square(square, dest));
+		}
+
 	}
+
+	return false;
+
 }
 
-void knight_moves(struct game *gm, uint8_t square)
+bool knight_moves(struct game *gm, uint8_t square)
 {
 	uint8_t figure, color, dest, take, cnt;
 	int8_t dx, dy, x, y;
@@ -260,12 +270,12 @@ void knight_moves(struct game *gm, uint8_t square)
 	figure = get_piece(gm->board, square);
 
 	if (FIG(figure) != KNIGHT)
-		return;
+		return false;
 
 	color = COL(figure);
 
 	if ((color >> 3) != gm->turn)
-		return;
+		return false;
 
 	for (cnt = 0 ; cnt < 7 ; cnt++) {
 		x = (int8_t)SQI(square) + moves[cnt][0];
@@ -273,13 +283,18 @@ void knight_moves(struct game *gm, uint8_t square)
 		if ((x >= 0) && (x <= 7) && (y >= 0) && (y <= 7)) {
 			dest = SQUARE((uint8_t)x, (uint8_t)y);
 			take = get_piece(gm->board, dest);
-			if ((0 == take) || (COL(take) != color))
+			if ((0 == take) || (COL(take) != color)) {
+				if (FIG(take) == KING)
+					return true;
 				set_move(gm->moves, gm->move_cnt++, prepare_move_square(square, dest));
+			}
 		}
 	}
+
+	return false;
 }
 
-void brq_moves(struct game *gm, uint8_t square)
+bool brq_moves(struct game *gm, uint8_t square)
 {
 	uint8_t figure, color, dest, take, cnt1, cnt2, start, stop;
 	int8_t dx, dy, x, y;
@@ -306,13 +321,13 @@ void brq_moves(struct game *gm, uint8_t square)
 		start = 0;
 		stop  = 8;
 	} else {
-		return;
+		return false;
 	}
 
 	color = COL(figure);
 
 	if ((color >> 3) != gm->turn)
-		return;
+		return false;
 
 	for (cnt1 = start ; cnt1 < stop; cnt1++) {
 		for (cnt2 = 1 ; cnt2 < 8 ; cnt2++) {
@@ -324,6 +339,8 @@ void brq_moves(struct game *gm, uint8_t square)
 				if (0 == take) {
 					set_move(gm->moves, gm->move_cnt++, prepare_move_square(square, dest));
 				} else if (COL(take) != color) {
+					if (FIG(take) == KING)
+						return true;
 					set_move(gm->moves, gm->move_cnt++, prepare_move_square(square, dest));
 					break;
 				} else {
@@ -334,11 +351,12 @@ void brq_moves(struct game *gm, uint8_t square)
 			}
 		}
 	}
+	return false;
 }
 
-void king_moves(struct game *gm, uint8_t square)
+bool king_moves(struct game *gm, uint8_t square)
 {
-	uint8_t figure, color, dest, take, cnt;
+	uint8_t figure, color, dest, take, cnt, castle;
 	int8_t dx, dy, x, y;
 	int8_t moves[8][2] = {
 		{ 1, -1},
@@ -354,12 +372,12 @@ void king_moves(struct game *gm, uint8_t square)
 	figure = get_piece(gm->board, square);
 
 	if (FIG(figure) != KING)
-		return;
+		return false;
 
 	color = COL(figure);
 
 	if ((color >> 3) != gm->turn)
-		return;
+		return false;
 
 	for (cnt = 0 ; cnt < 7 ; cnt++) {
 		x = (int8_t)SQI(square) + moves[cnt][0];
@@ -367,12 +385,57 @@ void king_moves(struct game *gm, uint8_t square)
 		if ((x >= 0) && (x <= 7) && (y >= 0) && (y <= 7)) {
 			dest = SQUARE((uint8_t)x, (uint8_t)y);
 			take = get_piece(gm->board, dest);
-			if ((0 == take) || (COL(take) != color))
+			if (0 == take) {
 				set_move(gm->moves, gm->move_cnt++, prepare_move_square(square, dest));
+			} else if (COL(take) != color) { 
+				if (FIG(take) == KING)
+					return true;
+				set_move(gm->moves, gm->move_cnt++, prepare_move_square(square, dest));
+			}
 		}
 	}
+
+	return false;
 }
 
+bool castle_moves(struct game *gm, uint8_t square)
+{
+	uint8_t figure, color, dest, take, rook, castle, x, y;
+
+	figure = get_piece(gm->board, square);
+
+	if (FIG(figure) != KING)
+		return false;
+
+	color = COL(figure);
+
+	if ((color >> 3) != gm->turn)
+		return false;
+
+
+	castle = (gm->castle >> (gm->turn * 2)) & 0x3;
+	x = SQI(square);
+	y = SQJ(square);
+
+	if (castle & 1) {
+		if ((GET_PIECE(gm->board, x, y + 1) == 0) &&
+				(GET_PIECE(gm->board, x, y + 2) == 0)) {
+				set_move(gm->moves, gm->move_cnt++, prepare_move_xy(x, y, x, y + 2));
+				set_move(gm->moves, gm->move_cnt++, prepare_move_xy(x, y + 3, x, y + 1));
+			}
+	}
+
+	if (castle & 2) {
+		if ((GET_PIECE(gm->board, x, y - 1) == 0) &&
+				(GET_PIECE(gm->board, x, y - 2) == 0) &&
+				(GET_PIECE(gm->board, x, y - 3) == 0)) {
+				set_move(gm->moves, gm->move_cnt++, prepare_move_xy(x, y, x, y - 2));
+				set_move(gm->moves, gm->move_cnt++, prepare_move_xy(x, y - 4, x, y - 1));
+			}
+	}
+
+	return false;
+}
 bool is_legal(struct game* fight, uint16_t move)
 {
 	return true;
