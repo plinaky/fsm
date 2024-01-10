@@ -17,14 +17,14 @@ uint8_t default_board[8][8] = {
 */
 
 uint8_t default_board[8][8] = {
-	{WR,  0, WB, WQ, WK, WB,  0, WR},
-	{WP,  0, WP, WP, WP, WP, WP, WP},
-	{WN,  0,  0,  0,  0, WN,  0,  0},
+	{WR,  0,  0,  0, WK,  0,  0, WR},
+	{WP, WB, WP, WQ, WP, WP, WB, WP},
+	{WN,  0,  0, WP,  0, WN, WP,  0},
 	{ 0, BB,  0,  0,  0,  0,  0,  0},
 	{ 0, WP, BP, BP, BP, BP,  0,  0},
-	{ 0,  0,  0,  0,  0,  0,  0,  0},
-	{BP, BP,  0,  0,  0, BP, BP, BP},
-	{BR, BN, BB, BQ, BK,  0, BN, BR}
+	{ 0,  0, BN,  0, BB, BN,  0,  0},
+	{BP, BP, BQ,  0,  0, BP, BP, BP},
+	{BR,  0,  0,  0, BK,  0,  0, BR}
 };
 
 char to_char(uint8_t fig)
@@ -62,25 +62,6 @@ void set_piece(uint8_t board[32], uint8_t square, uint8_t fig)
 
 	board[pos / 2] &= ~(0xf << (4 * (j % 2)));
 	board[pos / 2] |= fig << (4 * (j % 2));
-}
-
-uint8_t get_square(uint8_t board[32], uint8_t fig)
-{
-	if (COL(fig) == WHITE) {
-		for (int8_t i = 0; i < 8; i++)
-			for (int8_t j = 0; j < 8; j++)
-				if (GET_PIECE(board, i, j) == fig)
-					return SQUARE(i, j);
-		printf("%c not found", to_char(fig));
-	} else {
-		for (int8_t i = 7; i >= 0; i--)
-			for (int8_t j = 7; j >= 0; j--)
-				if (GET_PIECE(board, i, j) == fig)
-					return SQUARE(i, j);
-		printf("%c not found", to_char(fig));
-	}
-
-	return 0;
 }
 
 void print_pos(uint8_t board[32])

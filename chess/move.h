@@ -3,18 +3,33 @@
 
 #include <stdbool.h>
 
-struct game {
-    uint32_t *moves;
-    uint8_t board[32];
-    uint16_t move_cnt;
-    uint8_t  checks[3];
-    uint8_t  en_passant : 6; /* a square */
-    uint8_t  castle : 4;
-    uint8_t  check_status : 2;
-    uint8_t  turn : 1;
-    uint8_t  mate : 1;
-    uint8_t  null : 1;
+/* we use a fixed but small (8) number of moves
+ * and store several structures of this kind
+ * for actually longer games.
+ *
+ * The idea is to work with game chunks that combine
+ * a position and the best known sequence of moves behind
+ *
+ * right now fits in : 12 uint32_t 
+ * */
+struct chunk {
+    uint32_t  board[8];
+    uint32_t  moves[3];
+    uint32_t  chunk_cnt  : 19; /* up to 524288 chunks */
+    uint32_t  move_cnt   : 3;  /* of 8 moves */
+    uint32_t  castle     : 4;
+    uint32_t  king       : 2;  /* 1: latest is OO, 2: OOO */
+    uint32_t  en_passant : 3;  /* column */
+    uint32_t  turn       : 1;
 } __attribute__((packed));
+
+struct move_list {
+    uint32_t moves[96]; /* up to 256 moves */
+    uint8_t  board1[32];
+    uint8_t  board2[32];
+    uint8_t  move_cnt;
+    struct   game *gm;
+};
 
 
 /*
@@ -38,15 +53,9 @@ struct game {
  * +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
  * */
 
-uint16_t get_move(uint32_t *moves, uint16_t pos);
-void set_move(uint32_t *moves, uint16_t pos, uint16_t move);
-bool pinned(uint8_t board[32], uint8_t figs_square);
-bool is_legal(struct game*, uint16_t move);
-bool pawn_moves(struct game *gm, uint8_t square);
-bool knight_moves(struct game *gm, uint8_t square);
-bool brq_moves(struct game *gm, uint8_t square);
-bool king_moves(struct game *gm, uint8_t square);
-bool castle_moves(struct game *gm, uint8_t square);
-void print_move(uint16_t mouv);
+uint16_t get_move(uint32_t *moves, uint8_t pos);
+void set_move(uint32_t *moves, uint8_t pos, uint16_t move);
+bool list_moves(struct game *gm);
+void print_move(uint16_t mov);
 
 #endif

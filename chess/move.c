@@ -4,35 +4,7 @@
 #include "board.h"
 #include "move.h"
 
-#define NN 1
-#define NE 2
-#define EE 3
-#define SE 4
-#define SS 5
-#define SW 6
-#define WW 7
-#define NW 8
-
-
-#define ABS(_X) ((_X) > 0 ? (_X) : -(_X))
-
-/* special set of macros to get DX and DY from DIR */
-
-#define PHASE(_X) (ABS(((_X) % 8) - 4) - 2)
-
-#define DELTA(_X) (PHASE((_X)) - PHASE((_X)) / 2)
-
-#define D_X(_DIR) (DELTA((_DIR) + 7))
-
-#define D_Y(_DIR) (DELTA((_DIR) + 5))
-
-#define FOR_DIR(_DIR, _DX, _DY) for (                         \
-		_DIR = NN, _DX = D_X(_DIR), _DY = D_Y(_DIR) ; \
-		_DIR <= NW ;                                  \
-		_DIR++, _DX = D_X(_DIR), _DY = D_Y(_DIR)      \
-		)
-
-void print_square(uint8_t square)
+static void print_square(uint8_t square)
 {
 	printf("%c%d",
 	       'a' + (char)((square >> 0) & 0x7),
@@ -43,13 +15,12 @@ void print_square(uint8_t square)
 void print_move(uint16_t mov)
 {
 	print_square((uint8_t)mov);
-	printf("-");
 	print_square((uint8_t)(mov >> 6));
 	printf(" ");
 }
 
 
-uint16_t get_move(uint32_t *moves, uint16_t pos)
+uint16_t get_move(uint32_t *moves, uint8_t pos)
 {
 	uint8_t *my_moves = (uint8_t *)moves;
 	uint32_t pair = *((uint32_t *)(my_moves + 3 * (pos / 2)));
@@ -72,7 +43,7 @@ static inline uint16_t prepare_move_square(uint8_t start, uint8_t end)
 		(((uint16_t)start & 0x3f) << 0);
 }
 
-void set_move(uint32_t *moves, uint16_t pos, uint16_t move)
+void set_move(uint32_t *moves, uint8_t pos, uint16_t move)
 {
 	uint8_t  *my_moves = (uint8_t *)moves;
 	uint32_t *pair = (uint32_t *)(my_moves + 3 * (pos / 2));
@@ -83,119 +54,7 @@ void set_move(uint32_t *moves, uint16_t pos, uint16_t move)
 	*pair |= this_move << offset;
 }
 
-static int8_t aligned(uint8_t start, uint8_t stop)
-{
-	uint8_t x1 = SQI(start);
-	uint8_t y1 = SQJ(start);
-	uint8_t x2 = SQI(stop);
-	uint8_t y2 = SQJ(stop);
-	uint8_t al;
-
-	if ((x1 <  x2) && (y1 == y2)                        ) return NN;
-	if ((x1 <  x2) && (y1 <  y2) && (x2 - x1 == y2 - y1)) return NE;
-	if ((x1 == x2) && (y1 <  y2)                        ) return EE;
-	if ((x1 >  x2) && (y1 <  y2) && (x1 - x2 == y2 - y1)) return SE;
-	if ((x1 >  x2) && (y1 == y2)                        ) return SS;
-	if ((x1 >  x2) && (y1 >  y2) && (x1 - x2 == y1 - y2)) return SW;
-	if ((x1 == x2) && (y1 >  y2)                        ) return WW;
-	if ((x1 <  x2) && (y1 >  y2) && (x2 - x1 == y1 - y2)) return NW;
-
-	return 0;
-}
-
-bool pinned(uint8_t board[32], uint8_t figs_square)
-{
-	uint8_t square, kings_square;
-	uint8_t fig, figure;
-	int8_t al, dx, dy;
-
-	figure = get_piece(board, figs_square);
-	
-	kings_square = get_square(board, COL(figure) | KING);
-
-	al = aligned(kings_square, figs_square);
-
-	/*
-	printf("%c %c%d alignement with its king in %c%d is %d\n",
-	       to_char(figure),'a' + SQJ(figs_square), 1 + SQI(figs_square),
-	       'a' + SQJ(kings_square), 1 + SQI(kings_square),
-	       al);
-	*/
-	if (!al)
-		return false; /* figure and king are not aligned */
-
-	dx = D_X(al);
-	dy = D_Y(al);
-
-	/*
-	** From now on, we know that there is an
-	** alignement and we know its direction.
-	** So let's heck if there is a piece between the
-	** figure and the king along this direction.
-	** */
-	square = kings_square;
-	do {
-		square = SQUARE(SQI(square) + dx, SQJ(square) + dy);
-		fig = get_piece(board, square);
-		//printf("before king in %c%d found %c\n", 'a' + SQJ(square), 1 + SQI(square), to_char(fig));
-
-		if ((fig != 0) && (fig != figure))
-			return false;
-
-	} while (square != figs_square);
-	
-	/*
-	** We have reached the king without crossing any other piece.
-	** So let's check if we have reached an edge
-	** */
-	if (((dx == -1) && (SQI(square) == 0)) ||
-	    ((dx ==  1) && (SQI(square) == 7)) ||
-	    ((dy == -1) && (SQJ(square) == 0)) ||
-	    ((dy ==  1) && (SQJ(square) == 7)))
-		return false;
-
-	do {
-		/*
-		** Thanks to the previous check we know that
-		** there is at least one more square to examine
-		** */
-		square = SQUARE(SQI(square) + dx, SQJ(square) + dy);
-		fig = get_piece(board, square);
-		//printf("after king in %c%d found %c\n", 'a' + SQJ(square), 1 + SQI(square), to_char(fig));
-		/* There is someone here */
-		if (fig != 0) {
-
-			/* It is a friend: no pinning */
-			if (COL(fig) == COL(figure))
-				return false;
-
-			/* It is a foe on diagonals: pinning */
-			if (((NE == al) || (SW == al) || (NW == al) || (SE == al)) &&
-			    ((FIG(fig) == BISHOP) || (FIG(fig) == QUEEN)))
-				return true;
-
-			/* It is a foe on rows or columns: pinning */
-			if (((NN == al) || (SS == al) || (WW == al) || (EE == al)) &&
-			    ((FIG(fig) == ROOK) || (FIG(fig) == QUEEN)))
-				return true;
-
-			/* It is a non threatening foe: no pinning */
-			return false;
-		}
-
-		/*
-		** We have reached an edge and we know that the square is empty
-		** */
-		if (((dx == -1) && (SQI(square) == 0)) ||
-		    ((dx ==  1) && (SQI(square) == 7)) ||
-		    ((dy == -1) && (SQJ(square) == 0)) ||
-		    ((dy ==  1) && (SQJ(square) == 7)))
-			return false;
-
-	} while (1); /* It is safe to do so */
-}
-
-bool pawn_moves(struct game *gm, uint8_t square)
+static bool pawn_moves(struct game *gm, uint8_t square)
 {
 	uint8_t figure, color, dest, take;
 	int8_t dx;
@@ -206,9 +65,6 @@ bool pawn_moves(struct game *gm, uint8_t square)
 		return false;
 
 	color = COL(figure);
-
-	if ((color >> 3) != gm->turn)
-		return false;
 
 	if (color)
 		dx = -1;
@@ -234,7 +90,6 @@ bool pawn_moves(struct game *gm, uint8_t square)
 				return true;
 			set_move(gm->moves, gm->move_cnt++, prepare_move_square(square, dest));
 		}
-
 	}
 
 	if (SQJ(square) < 7) {
@@ -245,17 +100,16 @@ bool pawn_moves(struct game *gm, uint8_t square)
 				return true;
 			set_move(gm->moves, gm->move_cnt++, prepare_move_square(square, dest));
 		}
-
 	}
 
 	return false;
 
 }
 
-bool knight_moves(struct game *gm, uint8_t square)
+static bool knight_moves(struct game *gm, uint8_t square)
 {
 	uint8_t figure, color, dest, take, cnt;
-	int8_t dx, dy, x, y;
+	int8_t x, y;
 	int8_t moves[8][2] = {
 		{ 1,  2},
 		{ 1, -2},
@@ -274,14 +128,11 @@ bool knight_moves(struct game *gm, uint8_t square)
 
 	color = COL(figure);
 
-	if ((color >> 3) != gm->turn)
-		return false;
-
 	for (cnt = 0 ; cnt < 7 ; cnt++) {
 		x = (int8_t)SQI(square) + moves[cnt][0];
 		y = (int8_t)SQJ(square) + moves[cnt][1];
 		if ((x >= 0) && (x <= 7) && (y >= 0) && (y <= 7)) {
-			dest = SQUARE((uint8_t)x, (uint8_t)y);
+			dest = SQUARE(x, y);
 			take = get_piece(gm->board, dest);
 			if ((0 == take) || (COL(take) != color)) {
 				if (FIG(take) == KING)
@@ -294,10 +145,10 @@ bool knight_moves(struct game *gm, uint8_t square)
 	return false;
 }
 
-bool brq_moves(struct game *gm, uint8_t square)
+static bool brq_moves(struct game *gm, uint8_t square)
 {
 	uint8_t figure, color, dest, take, cnt1, cnt2, start, stop;
-	int8_t dx, dy, x, y;
+	int8_t x, y;
 	int8_t offsets[8][2] = {
 		{ 1,  1},
 		{ 1, -1},
@@ -326,15 +177,12 @@ bool brq_moves(struct game *gm, uint8_t square)
 
 	color = COL(figure);
 
-	if ((color >> 3) != gm->turn)
-		return false;
-
 	for (cnt1 = start ; cnt1 < stop; cnt1++) {
 		for (cnt2 = 1 ; cnt2 < 8 ; cnt2++) {
 			x = (int8_t)SQI(square) + cnt2 * offsets[cnt1][0];
 			y = (int8_t)SQJ(square) + cnt2 * offsets[cnt1][1];
 			if ((x >= 0) && (x <= 7) && (y >= 0) && (y <= 7)) {
-				dest = SQUARE((uint8_t)x, (uint8_t)y);
+				dest = SQUARE(x, y);
 				take = get_piece(gm->board, dest);
 				if (0 == take) {
 					set_move(gm->moves, gm->move_cnt++, prepare_move_square(square, dest));
@@ -351,13 +199,14 @@ bool brq_moves(struct game *gm, uint8_t square)
 			}
 		}
 	}
+
 	return false;
 }
 
-bool king_moves(struct game *gm, uint8_t square)
+static bool king_moves(struct game *gm, uint8_t square)
 {
 	uint8_t figure, color, dest, take, cnt, castle;
-	int8_t dx, dy, x, y;
+	int8_t x, y;
 	int8_t moves[8][2] = {
 		{ 1, -1},
 		{ 1,  0},
@@ -376,14 +225,11 @@ bool king_moves(struct game *gm, uint8_t square)
 
 	color = COL(figure);
 
-	if ((color >> 3) != gm->turn)
-		return false;
-
 	for (cnt = 0 ; cnt < 7 ; cnt++) {
 		x = (int8_t)SQI(square) + moves[cnt][0];
 		y = (int8_t)SQJ(square) + moves[cnt][1];
 		if ((x >= 0) && (x <= 7) && (y >= 0) && (y <= 7)) {
-			dest = SQUARE((uint8_t)x, (uint8_t)y);
+			dest = SQUARE(x, y);
 			take = get_piece(gm->board, dest);
 			if (0 == take) {
 				set_move(gm->moves, gm->move_cnt++, prepare_move_square(square, dest));
@@ -398,54 +244,50 @@ bool king_moves(struct game *gm, uint8_t square)
 	return false;
 }
 
-bool castle_moves(struct game *gm, uint8_t square)
+static bool castle_moves(struct game *gm, uint8_t square)
 {
-	uint8_t figure, color, dest, take, rook, castle, x, y;
+	uint8_t figure, castle, x, y;
 
 	figure = get_piece(gm->board, square);
 
 	if (FIG(figure) != KING)
 		return false;
 
-	color = COL(figure);
-
-	if ((color >> 3) != gm->turn)
-		return false;
-
-
 	castle = (gm->castle >> (gm->turn * 2)) & 0x3;
 	x = SQI(square);
 	y = SQJ(square);
 
-	if (castle & 1) {
-		if ((GET_PIECE(gm->board, x, y + 1) == 0) &&
-				(GET_PIECE(gm->board, x, y + 2) == 0)) {
-				set_move(gm->moves, gm->move_cnt++, prepare_move_xy(x, y, x, y + 2));
-				set_move(gm->moves, gm->move_cnt++, prepare_move_xy(x, y + 3, x, y + 1));
-			}
-	}
+	if ((castle & 1) &&
+			(GET_PIECE(gm->board, x, y + 1) == 0) &&
+			(GET_PIECE(gm->board, x, y + 2) == 0))
+		set_move(gm->moves, gm->move_cnt++, prepare_move_xy(x, y, x, y + 2));
 
-	if (castle & 2) {
-		if ((GET_PIECE(gm->board, x, y - 1) == 0) &&
-				(GET_PIECE(gm->board, x, y - 2) == 0) &&
-				(GET_PIECE(gm->board, x, y - 3) == 0)) {
-				set_move(gm->moves, gm->move_cnt++, prepare_move_xy(x, y, x, y - 2));
-				set_move(gm->moves, gm->move_cnt++, prepare_move_xy(x, y - 4, x, y - 1));
-			}
-	}
+	if ((castle & 2) &&
+			(GET_PIECE(gm->board, x, y - 1) == 0) &&
+			(GET_PIECE(gm->board, x, y - 2) == 0) &&
+			(GET_PIECE(gm->board, x, y - 3) == 0)) 
+		set_move(gm->moves, gm->move_cnt++, prepare_move_xy(x, y, x, y - 2));
 
 	return false;
 }
-bool is_legal(struct game* fight, uint16_t move)
-{
-	return true;
-}
 
-#undef NN
-#undef SS
-#undef EE
-#undef WW
-#undef NE
-#undef SO
-#undef NO
-#undef SE
+bool list_moves(struct game *gm)
+{
+	uint8_t i, j, square, fig;
+
+	gm->move_cnt = 0;
+
+	for (j = 0; j < 8; j++) {
+		for (i = 0; i < 8; i++) {
+			square = SQUARE(i, j);
+			fig = get_piece(gm->board, square);
+			if ((fig) && (COL(fig) == gm->turn) &&
+					((pawn_moves(gm, square))  ||
+					(knight_moves(gm, square)) ||
+					(brq_moves(gm, square))    ||
+					(king_moves(gm, square))   ||
+					(castle_moves(gm, square))))
+						return true;
+		}
+	}
+}

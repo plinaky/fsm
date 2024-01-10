@@ -30,8 +30,8 @@
 
 #define SQUARE(_i, _j) ((uint8_t)(((uint8_t)(_i) << 3  | (uint8_t)(_j)) & 0x3f))
 
-#define FIG(_fig) ((_fig) & 0x7)
-#define COL(_fig) ((_fig) & 0x8)
+#define FIG(_fig) ((uint8_t)((_fig) & 0x7))
+#define COL(_fig) ((uint8_t)(((_fig) & 0x8) >> 3))
 
 #define GET_PIECE(_board, _i, _j) get_piece(_board, SQUARE((_i), (_j)))
 #define SET_PIECE(_board, _i, _j, _fig) set_piece(_board, SQUARE((_i), (_j)), (_fig))
@@ -42,10 +42,6 @@ char to_char(uint8_t fig);
 
 uint8_t get_piece(uint8_t board[32], uint8_t square);
 void set_piece(uint8_t board[32], uint8_t square, uint8_t fig);
-
-/* not bijective, beware if you ask for the square of a piece
-**  appearing several times, typically a pawn */
-uint8_t get_square(uint8_t board[32], uint8_t fig);
 
 void print_pos(uint8_t board[32]);
 

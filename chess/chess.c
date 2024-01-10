@@ -9,53 +9,32 @@ int main(void)
 {
 	uint8_t square, fig, i, j, k;
 	struct game gm;
-	uint32_t moves[40];
 
 	for (i = 0; i < 8; i++)
 		for (j = 0; j < 8; j++)
 			set_piece(gm.board, SQUARE(i, j), default_board[i][j]);
 
-	gm.moves = (uint32_t *)moves;
-	/*	
-	*/
-	gm.turn = 0;
-	gm.en_passant = SQUARE(5, 2);
-	/*
-	gm.turn = 1;
-	gm.en_passant = 0;
-	 */
+	gm.castle = 0xf;
 
 	print_pos(gm.board);
 
-	for (i = 0; i < 8; i++) {
-		for (j = 0; j < 8; j++) {
-			square = SQUARE(i, j);
-			fig = get_piece(gm.board, square);
-			if (fig) {
-				if (pinned(gm.board, square))
-					printf("%c in %c%d : is pinned \n", to_char(fig), 'a' + SQJ(square), 1 + SQI(square));
-			}
-		}
+	printf("\nWhite to play\n");
+	gm.turn = 0;
+	gm.en_passant = SQUARE(5, 2);
+	list_moves(&gm);
+	for (k = 0; k < gm.move_cnt; k++) {
+		print_move(get_move(gm.moves, k));
 	}
+	printf("\n");
 
-	for (j = 0; j < 8; j++) {
-		for (i = 0; i < 8; i++) {
-			square = SQUARE(i, j);
-			fig = get_piece(gm.board, square);
-			if (fig) {
-				gm.move_cnt = 0;
-				pawn_moves(&gm, square);
-				knight_moves(&gm, square);
-				brq_moves(&gm, square);
-				king_moves(&gm, square);
-				for (k = 0; k < gm.move_cnt; k++) {
-					print_move(get_move(gm.moves, k));
-				}
-				if (k)
-					printf("\n");
-			}
-		}
+	printf("\nBlack to play\n");
+	gm.turn = 1;
+	gm.en_passant = 0;
+	list_moves(&gm);
+	for (k = 0; k < gm.move_cnt; k++) {
+		print_move(get_move(gm.moves, k));
 	}
+	printf("\n");
 
 	return 0;
 }
