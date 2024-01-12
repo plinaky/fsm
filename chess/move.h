@@ -3,32 +3,42 @@
 
 #include <stdbool.h>
 
-/* we use a fixed but small (8) number of moves
- * and store several structures of this kind
- * for actually longer games.
- *
- * The idea is to work with game chunks that combine
- * a position and the best known sequence of moves behind
- *
- * right now fits in : 12 uint32_t 
- * */
-struct chunk {
-    uint32_t  board[8];
-    uint32_t  moves[3];
-    uint32_t  chunk_cnt  : 19; /* up to 524288 chunks */
-    uint32_t  move_cnt   : 3;  /* of 8 moves */
-    uint32_t  castle     : 4;
-    uint32_t  king       : 2;  /* 1: latest is OO, 2: OOO */
-    uint32_t  en_passant : 3;  /* column */
-    uint32_t  turn       : 1;
+struct position {
+    uint32_t board[8];
+    uint8_t  castle     : 4;
+    uint8_t  en_passant : 3;  /* column */
+    uint8_t  king       : 2;  /* 1: latest is OO, 2: OOO */
+    uint8_t  turn       : 1;  /* 0: white, 1 black */
 } __attribute__((packed));
 
-struct move_list {
-    uint32_t moves[96]; /* up to 256 moves */
-    uint8_t  board1[32];
-    uint8_t  board2[32];
-    uint8_t  move_cnt;
-    struct   game *gm;
+enum piece { /* keep this order for promotion */
+    QUEEN   = 1,
+    ROOK    = 2,
+    BISHOP  = 3,
+    KNIGHT  = 4,
+    PAWN    = 5,
+    KING    = 6
+} __attribute__((packed));
+
+enum color {
+    WHITE   = 0,
+    BLACK   = 1
+} __attribute__((packed));
+
+
+struct move {
+    uint16_t col1 : 3;
+    uint16_t lin1 : 3;
+    uint16_t col2 : 3;
+    uint16_t lin2 : 3;
+    uint16_t prom : 2;
+} __attribute__((packed));
+
+struct node {
+    int64_t  score;
+    int64_t  visit;
+    struct node *side;
+    struct node *down;
 };
 
 
