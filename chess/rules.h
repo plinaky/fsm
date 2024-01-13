@@ -1,6 +1,8 @@
 #ifndef RULES_H
 #define RULES_H
 
+#include <stdbool.h>
+
 enum figure {
 	KNIGHT = 1,
 	BISHOP = 2,
@@ -32,27 +34,36 @@ struct move {
 } __attribute__((packed));
 
 
-enum pieces {
-	WN =  1, WB =  2, WR =  3, WQ =  4, WP =  5, WK =  6,
-	BN =  9, BB = 10, BR = 11, BQ = 12, BP = 13, BK = 14
+extern const struct piece WN;
+extern const struct piece WB;
+extern const struct piece WR;
+extern const struct piece WQ;
+extern const struct piece WK;
+
+extern const struct piece BN;
+extern const struct piece BB;
+extern const struct piece BR;
+extern const struct piece BQ;
+extern const struct piece BK;
+
+struct position {
+    uint32_t board[8];
+    uint8_t  castle     : 4;
+    uint8_t  en_passant : 3;  /* column */
+    uint8_t  king       : 2;  /* 1: latest is OO, 2: OOO */
+    uint8_t  turn       : 1;  /* 0: white, 1 black */
 } __attribute__((packed));
 
+extern struct piece default_board[8][8];
 
-#define SQUARE(_i, _j) ((uint8_t)(((uint8_t)(_i) << 3  | (uint8_t)(_j)) & 0x3f))
+char to_char(const struct piece pi);
 
-#define FIG(_fig) ((uint8_t)((_fig) & 0x7))
-#define COL(_fig) ((uint8_t)(((_fig) & 0x8) >> 3))
+struct piece get_piece(struct position *po, struct square sq);
+void set_piece(struct position *po, struct square sq, struct piece pi);
 
-#define GET_PIECE(_board, _i, _j) get_piece(_board, SQUARE((_i), (_j)))
-#define SET_PIECE(_board, _i, _j, _fig) set_piece(_board, SQUARE((_i), (_j)), (_fig))
+void print_pos(struct position *po);
 
-extern uint8_t default_board[8][8];
-
-char to_char(uint8_t fig);
-
-uint8_t get_piece(uint8_t board[32], uint8_t square);
-void set_piece(uint8_t board[32], uint8_t square, uint8_t fig);
-
-void print_pos(uint8_t board[32]);
+bool list_moves(struct position *po);
+void print_move(struct move mo);
 
 #endif

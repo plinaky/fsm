@@ -3,8 +3,21 @@
 #include <stdint.h>
 #include "board.h"
 
+const struct piece WN = {WHITE, KNIGHT};
+const struct piece WB = {WHITE, BISHOP};
+const struct piece WR = {WHITE, ROOK};
+const struct piece WQ = {WHITE, QUEEN};
+const struct piece WK = {WHITE, KING};
+
+const struct piece BN = {BLACK, KNIGHT};
+const struct piece BB = {BLACK, BISHOP};
+const struct piece BR = {BLACK, ROOK};
+const struct piece BQ = {BLACK, QUEEN};
+const struct piece BK = {BLACK, KING};
+
+
 /*
-uint8_t default_board[8][8] = {
+struct piece default_board[8][8] = {
 	{WR, WN, WB, WQ, WK, WB, WN, WR},
 	{WP, WP, WP, WP, WP, WP, WP, WP},
 	{ 0,  0,  0,  0,  0,  0,  0,  0},
@@ -16,7 +29,8 @@ uint8_t default_board[8][8] = {
 };
 */
 
-uint8_t default_board[8][8] = {
+
+struct piece default_board[8][8] = {
 	{WR,  0,  0,  0, WK,  0,  0, WR},
 	{WP, WB, WP, WQ, WP, WP, WB, WP},
 	{WN,  0,  0, WP,  0, WN, WP,  0},
@@ -27,45 +41,47 @@ uint8_t default_board[8][8] = {
 	{BR,  0,  0,  0, BK,  0,  0, BR}
 };
 
-char to_char(uint8_t fig)
+char to_char(const struct piece pi)
 {
-	if (fig == WP) return 'P';
-	if (fig == WN) return 'N';
-	if (fig == WB) return 'B';
-	if (fig == WR) return 'R';
-	if (fig == WQ) return 'Q';
-	if (fig == WK) return 'K';
+	if (pi == WP) return 'P';
+	if (pi == WN) return 'N';
+	if (pi == WB) return 'B';
+	if (pi == WR) return 'R';
+	if (pi == WQ) return 'Q';
+	if (pi == WK) return 'K';
 
-	if (fig == BP) return 'p';
-	if (fig == BN) return 'n';
-	if (fig == BB) return 'b';
-	if (fig == BR) return 'r';
-	if (fig == BQ) return 'q';
-	if (fig == BK) return 'k';
+	if (pi == BP) return 'p';
+	if (pi == BN) return 'n';
+	if (pi == BB) return 'b';
+	if (pi == BR) return 'r';
+	if (pi == BQ) return 'q';
+	if (pi == BK) return 'k';
 
 	return ' ';
 }
 
-uint8_t get_piece(uint8_t board[32], uint8_t square)
+struct piece get_piece(struct position *po, struct square sq)
 {
-	uint16_t i = SQI(square);
-	uint16_t j = SQJ(square);
-	uint16_t pos = 8 * i + j;
-	return  0xf & (board[pos / 2] >> (4 * (j % 2)));
+	uint16_t i = sq.lin;
+	uint16_t j = sq.col;
+	uint16_t index = 8 * i + j;
+
+	return  0xf & (po->board[index / 2] >> (4 * (j % 2)));
 }
 
-void set_piece(uint8_t board[32], uint8_t square, uint8_t fig)
+void set_piece(struct position *po, struct square sq, struct piece pi);
 {
-	uint16_t i = SQI(square);
-	uint16_t j = SQJ(square);
-	uint16_t pos = 8 * i + j;
+	uint16_t i = sq.lin;
+	uint16_t j = sq.col;
+	uint16_t index = 8 * i + j;
 
-	board[pos / 2] &= ~(0xf << (4 * (j % 2)));
-	board[pos / 2] |= fig << (4 * (j % 2));
+	po->board[index / 2] &= ~(0xf << (4 * (j % 2)));
+	po->board[index / 2] |= fig << (4 * (j % 2));
 }
 
-void print_pos(uint8_t board[32])
+void print_pos(struct position *po)
 {
+	struct square sq;
 	char inv_start[] = "\x1b[7m";
 	char inv_stop[]  = "\x1b[0m";
 
@@ -80,8 +96,8 @@ void print_pos(uint8_t board[32])
 
 			if ((i + j) % 2)
 				printf("%s", inv_start);
-
-			printf(" %c ", to_char(GET_PIECE(board, i, j)));
+			sq = {i, j}
+			printf(" %c ", to_char(get_piece(po->board, sq)));
 
 			if ((i + j) % 2)
 				printf("%s", inv_stop);
@@ -94,4 +110,19 @@ void print_pos(uint8_t board[32])
 	}
 
 	printf("\t    a   b   c   d   e   f   g   h\n");
+}
+
+static void print_square(struct square sq)
+{
+	printf("%c%d",
+	       'a' + (char)(sq.col),
+	        1  + (sq.lin)
+	       );
+}
+
+void print_move(struct move mo)
+{
+	print_square(mo.start);
+	print_square(mo.stop);
+	printf(" ");
 }

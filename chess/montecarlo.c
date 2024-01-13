@@ -4,56 +4,6 @@
 #include "board.h"
 #include "move.h"
 
-static void print_square(uint8_t square)
-{
-	printf("%c%d",
-	       'a' + (char)((square >> 0) & 0x7),
-	        1  + ((square >> 3) & 0x7)
-	       );
-}
-
-void print_move(uint16_t mov)
-{
-	print_square((uint8_t)mov);
-	print_square((uint8_t)(mov >> 6));
-	printf(" ");
-}
-
-
-uint16_t get_move(uint32_t *moves, uint8_t pos)
-{
-	uint8_t *my_moves = (uint8_t *)moves;
-	uint32_t pair = *((uint32_t *)(my_moves + 3 * (pos / 2)));
-	uint8_t offset = 12 * (pos % 2);
-
-	return (uint16_t) ((pair >> offset) & 0xffffff);
-}
-
-static inline uint16_t prepare_move_xy(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2)
-{
-	return	(((uint16_t)x2 & 0x7) << 9) |
-		(((uint16_t)y2 & 0x7) << 6) |
-		(((uint16_t)x1 & 0x7) << 3) |
-		(((uint16_t)y1 & 0x7) << 0);
-}
-
-static inline uint16_t prepare_move_square(uint8_t start, uint8_t end)
-{
-	return  (((uint16_t)end   & 0x3f) << 6) |
-		(((uint16_t)start & 0x3f) << 0);
-}
-
-void set_move(uint32_t *moves, uint8_t pos, uint16_t move)
-{
-	uint8_t  *my_moves = (uint8_t *)moves;
-	uint32_t *pair = (uint32_t *)(my_moves + 3 * (pos / 2));
-	uint32_t  this_move = (uint32_t)move;
-	uint8_t   offset = 12 * (pos % 2);
-
-	*pair &= ~(0xffffff << offset);
-	*pair |= this_move << offset;
-}
-
 static bool pawn_moves(struct game *gm, uint8_t square)
 {
 	uint8_t figure, color, dest, take;
