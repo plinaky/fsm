@@ -22,8 +22,8 @@ struct piece default_board[8][8] = {
 	{WN_, OO_, OO_, WP_, OO_, WN_, WP_, OO_},
 	{OO_, BB_, OO_, OO_, OO_, OO_, OO_, OO_},
 	{OO_, WP_, BP_, BP_, BP_, BP_, OO_, OO_},
-	{OO_, OO_, BN_, OO_, BB_, BN_, OO_, OO_},
-	{BP_, BP_, BQ_, OO_, OO_, BP_, BP_, BP_},
+	{BN_, OO_, OO_, OO_, BB_, BN_, OO_, OO_},
+	{BP_, BP_, OO_, BQ_, OO_, BP_, BP_, BP_},
 	{BR_, OO_, OO_, OO_, BK_, OO_, OO_, BR_}
 };
 
@@ -179,11 +179,11 @@ static bool pawn_moves(struct position *po, int8_t li, int8_t co, struct move *m
 	return false;
 }
 
-static bool knight_moves(struct position *po, int8_t li, int8_t co, struct move *mo, uint64_t *cnt)
+static bool kk_moves(struct position *po, int8_t li, int8_t co, struct move *mo, uint64_t *cnt)
 {
 	struct piece pi, take;
-	int8_t index, x, y;
-	int8_t moves[8][2] = {
+	int8_t index, x, y, start, stop;
+	int8_t moves[16][2] = {
 		{ 1,  2},
 		{ 1, -2},
 		{ 2,  1},
@@ -191,15 +191,31 @@ static bool knight_moves(struct position *po, int8_t li, int8_t co, struct move 
 		{-1,  2},
 		{-1, -2},
 		{-2,  1},
-		{-2, -1}
+		{-2, -1},
+		{ 1, -1},
+		{ 1,  0},
+		{ 1,  1},
+		{ 0, -1},
+		{ 0,  1},
+		{-1, -1},
+		{-1,  0},
+		{-1,  1}
+
 	};
 
 	pi = get_piece(po, li, co);
 
-	if (pi.fig != KNIGHT)
+	if (KNIGHT == pi.fig) {
+		start = 0;
+		stop = 8;
+	} else if (KING == pi.fig) {
+		start = 8;
+		stop = 16;
+	} else {
 		return false;
+	}
 
-	for (index = 0 ; index < 7 ; index++) {
+	for (index = start ; index < stop ; index++) {
 		x = li + moves[index][0];
 		y = co + moves[index][1];
 		if ((x >= 0) && (x <= 7) && (y >= 0) && (y <= 7)) {
@@ -272,44 +288,6 @@ static bool brq_moves(struct position *po, int8_t li, int8_t co, struct move *mo
 	return false;
 }
 
-static bool king_moves(struct position *po, int8_t li, int8_t co, struct move *mo, uint64_t *cnt)
-{
-	struct piece pi, take;
-	int8_t index, x, y;
-	int8_t moves[8][2] = {
-		{ 1, -1},
-		{ 1,  0},
-		{ 1,  1},
-		{ 0, -1},
-		{ 0,  1},
-		{-1, -1},
-		{-1,  0},
-		{-1,  1}
-	};
-
-	pi = get_piece(po, li, co);
-
-	if (pi.fig != KING)
-		return false;
-
-	for (index = 0 ; index < 7 ; index++) {
-		x = li + moves[index][0];
-		y = co + moves[index][1];
-		if ((x >= 0) && (x <= 7) && (y >= 0) && (y <= 7)) {
-			take = get_piece(po, x, y);
-			if (EMPTY == take.fig) {
-				set_move(mo, cnt, li, co, x, y);
-			} else if (pi.col != take.col) {
-				if (KING == take.fig)
-					return true;
-				set_move(mo, cnt, li, co, x, y);
-			}
-		}
-	}
-
-	return false;
-}
-
 static bool castle_moves(struct position *po, int8_t li, int8_t co, struct move *mo, uint64_t *cnt)
 {
 	struct piece pi, t1, t2, t3;
@@ -351,14 +329,12 @@ bool list_moves(struct position *po, struct move *mo, uint64_t *cnt)
 			if ((EMPTY != pi.fig) && (pi.col == po->turn)) {
 				if (pawn_moves(po, i, j, mo, cnt))
 					return true;
-/*				else if (knight_moves(po, i, j, mo, cnt))
+				else if (kk_moves(po, i, j, mo, cnt))
 					return true;
 				else if (brq_moves(po, i, j, mo, cnt))
 					return true;
-				else if (king_moves(po, i, j, mo, cnt))
-					return true;
 				else if (castle_moves(po, i, j, mo, cnt))
-					return true;*/
+					return true;
 			}
 		}
 	}
