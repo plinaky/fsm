@@ -3,59 +3,6 @@
 #include <stdint.h>
 #include "board.h"
 #include "move.h"
-
-static bool pawn_moves(struct game *gm, uint8_t square)
-{
-	uint8_t figure, color, dest, take;
-	int8_t dx;
-
-	figure = get_piece(gm->board, square);
-
-	if (FIG(figure) != PAWN)
-		return false;
-
-	color = COL(figure);
-
-	if (color)
-		dx = -1;
-	else
-		dx = 1;
-
-	dest = SQUARE(SQI(square) + dx, SQJ(square));
-	if (get_piece(gm->board, dest) == 0) {
-		set_move(gm->moves, gm->move_cnt++, prepare_move_square(square, dest));
-		if ((1 == dx) && (1 == SQI(square)) ||
-			((-1 == dx) && (6 == SQI(square)))) {
-			dest = SQUARE(SQI(square) + 2 * dx, SQJ(square));
-			if (get_piece(gm->board, dest) == 0) 
-				set_move(gm->moves, gm->move_cnt++, prepare_move_square(square, dest));
-		}
-	}
-
-	if (SQJ(square) > 0) {
-		dest = SQUARE(SQI(square) + dx, SQJ(square) - 1);
-		take = get_piece(gm->board, dest);
-		if (((0 != take) && (COL(take) != color)) || (dest == gm->en_passant)) {
-			if (FIG(take) == KING)
-				return true;
-			set_move(gm->moves, gm->move_cnt++, prepare_move_square(square, dest));
-		}
-	}
-
-	if (SQJ(square) < 7) {
-		dest = SQUARE(SQI(square) + dx, SQJ(square) + 1);
-		take = get_piece(gm->board, dest);
-		if (((0 != take) && (COL(take) != color)) || (dest == gm->en_passant)) {
-			if (FIG(take) == KING)
-				return true;
-			set_move(gm->moves, gm->move_cnt++, prepare_move_square(square, dest));
-		}
-	}
-
-	return false;
-
-}
-
 static bool knight_moves(struct game *gm, uint8_t square)
 {
 	uint8_t figure, color, dest, take, cnt;

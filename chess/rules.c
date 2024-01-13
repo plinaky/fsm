@@ -1,79 +1,66 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
-#include "board.h"
-
-const struct piece WN = {WHITE, KNIGHT};
-const struct piece WB = {WHITE, BISHOP};
-const struct piece WR = {WHITE, ROOK};
-const struct piece WQ = {WHITE, QUEEN};
-const struct piece WK = {WHITE, KING};
-
-const struct piece BN = {BLACK, KNIGHT};
-const struct piece BB = {BLACK, BISHOP};
-const struct piece BR = {BLACK, ROOK};
-const struct piece BQ = {BLACK, QUEEN};
-const struct piece BK = {BLACK, KING};
-
+#include "rules.h"
 
 /*
 struct piece default_board[8][8] = {
-	{WR, WN, WB, WQ, WK, WB, WN, WR},
-	{WP, WP, WP, WP, WP, WP, WP, WP},
-	{ 0,  0,  0,  0,  0,  0,  0,  0},
-	{ 0,  0,  0,  0,  0,  0,  0,  0},
-	{ 0,  0,  0,  0,  0,  0,  0,  0},
-	{ 0,  0,  0,  0,  0,  0,  0,  0},
-	{BP, BP, BP, BP, BP, BP, BP, BP},
-	{BR, BN, BB, BQ, BK, BB, BN, BR}
+	{WR_, WN_, WB_, WQ_, WK_, WB_, WN_, WR_},
+	{WP_, WP_, WP_, WP_, WP_, WP_, WP_, WP_},
+	{OO_, OO_, OO_, OO_, OO_, OO_, OO_, OO_},
+	{OO_, OO_, OO_, OO_, OO_, OO_, OO_, OO_},
+	{OO_, OO_, OO_, OO_, OO_, OO_, OO_, OO_},
+	{OO_, OO_, OO_, OO_, OO_, OO_, OO_, OO_},
+	{BP_, BP_, BP_, BP_, BP_, BP_, BP_, BP_},
+	{BR_, BN_, BB_, BQ_, BK_, BB_, BN_, BR_}
 };
 */
 
-
 struct piece default_board[8][8] = {
-	{WR,  0,  0,  0, WK,  0,  0, WR},
-	{WP, WB, WP, WQ, WP, WP, WB, WP},
-	{WN,  0,  0, WP,  0, WN, WP,  0},
-	{ 0, BB,  0,  0,  0,  0,  0,  0},
-	{ 0, WP, BP, BP, BP, BP,  0,  0},
-	{ 0,  0, BN,  0, BB, BN,  0,  0},
-	{BP, BP, BQ,  0,  0, BP, BP, BP},
-	{BR,  0,  0,  0, BK,  0,  0, BR}
+	{WR_, OO_, OO_, OO_, WK_, OO_, OO_, WR_},
+	{WP_, WB_, WP_, WQ_, WP_, WP_, WB_, WP_},
+	{WN_, OO_, OO_, WP_, OO_, WN_, WP_, OO_},
+	{OO_, BB_, OO_, OO_, OO_, OO_, OO_, OO_},
+	{OO_, WP_, BP_, BP_, BP_, BP_, OO_, OO_},
+	{OO_, OO_, BN_, OO_, BB_, BN_, OO_, OO_},
+	{BP_, BP_, BQ_, OO_, OO_, BP_, BP_, BP_},
+	{BR_, OO_, OO_, OO_, BK_, OO_, OO_, BR_}
 };
 
 char to_char(const struct piece pi)
 {
-	if (pi == WP) return 'P';
-	if (pi == WN) return 'N';
-	if (pi == WB) return 'B';
-	if (pi == WR) return 'R';
-	if (pi == WQ) return 'Q';
-	if (pi == WK) return 'K';
+	char c = ' ';
 
-	if (pi == BP) return 'p';
-	if (pi == BN) return 'n';
-	if (pi == BB) return 'b';
-	if (pi == BR) return 'r';
-	if (pi == BQ) return 'q';
-	if (pi == BK) return 'k';
+	if (pi.fig == PAWN)   c = 'P';
+	if (pi.fig == KNIGHT) c = 'N';
+	if (pi.fig == BISHOP) c = 'B';
+	if (pi.fig == ROOK)   c = 'R';
+	if (pi.fig == QUEEN)  c = 'Q';
+	if (pi.fig == KING)   c = 'K';
 
-	return ' ';
+	if (BLACK == pi.col)
+		c = c - 'A' + 'a'; 
+
+	return c;
 }
 
-struct piece get_piece(struct position *po, struct square sq)
+struct piece get_piece(struct position *po, int8_t li, int8_t co)
 {
-	uint16_t i = sq.lin;
-	uint16_t j = sq.col;
+	uint16_t i = li;
+	uint16_t j = co;
 	uint16_t index = 8 * i + j;
+	uint8_t fig = 0xf & (po->board[index / 2] >> (4 * (j % 2)));
+	struct piece res = *((struct piece *)(&fig));
 
-	return  0xf & (po->board[index / 2] >> (4 * (j % 2)));
+	return res;
 }
 
-void set_piece(struct position *po, struct square sq, struct piece pi);
+void set_piece(struct position *po, int8_t li, int8_t co, struct piece pi)
 {
-	uint16_t i = sq.lin;
-	uint16_t j = sq.col;
+	uint16_t i = li;
+	uint16_t j = co;
 	uint16_t index = 8 * i + j;
+	uint8_t fig = *((uint8_t *)(&pi));
 
 	po->board[index / 2] &= ~(0xf << (4 * (j % 2)));
 	po->board[index / 2] |= fig << (4 * (j % 2));
@@ -81,7 +68,6 @@ void set_piece(struct position *po, struct square sq, struct piece pi);
 
 void print_pos(struct position *po)
 {
-	struct square sq;
 	char inv_start[] = "\x1b[7m";
 	char inv_stop[]  = "\x1b[0m";
 
@@ -96,8 +82,7 @@ void print_pos(struct position *po)
 
 			if ((i + j) % 2)
 				printf("%s", inv_start);
-			sq = {i, j}
-			printf(" %c ", to_char(get_piece(po->board, sq)));
+			printf(" %c ", to_char(get_piece(po, i, j)));
 
 			if ((i + j) % 2)
 				printf("%s", inv_stop);
@@ -112,17 +97,89 @@ void print_pos(struct position *po)
 	printf("\t    a   b   c   d   e   f   g   h\n");
 }
 
-static void print_square(struct square sq)
+static void print_square(int8_t li, int8_t co)
 {
 	printf("%c%d",
-	       'a' + (char)(sq.col),
-	        1  + (sq.lin)
+	       'a' + (char)co,
+	        1  + li
 	       );
 }
 
 void print_move(struct move mo)
 {
-	print_square(mo.start);
-	print_square(mo.stop);
+	print_square(mo.lin1, mo.col1);
+	print_square(mo.lin2, mo.col2);
 	printf(" ");
 }
+static inline struct move prepare_move(int8_t lin1, int8_t col1, int8_t lin2, int8_t col2)
+{
+	struct move mo;
+
+	mo.lin1 = lin1;
+	mo.col1 = col1;
+	mo.lin2 = lin2;
+	mo.col2 = col2;
+
+	return mo;
+}
+
+void set_move(uint16_t *moves, uint64_t *cnt, int8_t lin1, int8_t col1, int8_t lin2, int8_t col2)
+{
+	struct move mo = prepare_move(lin1, col1, lin2, col2);
+	uint16_t move = *((uint16_t *)(&mo));
+	moves[*cnt++] = move;
+}
+
+struct move get_move(uint16_t *moves, uint64_t cnt)
+{
+	return *((struct move *)(moves + cnt));
+}
+
+static bool pawn_moves(struct position *po, int8_t li, int8_t co, uint16_t *mo, uint64_t *cnt)
+{
+	struct piece pi, take;
+	int8_t dx;
+
+	pi = get_piece(po, li, co);
+
+	if (pi.fig != PAWN)
+		return false;
+
+	if (BLACK == pi.col)
+		dx = -1;
+	else
+		dx = 1;
+
+	if (get_piece(po, li + dx, co) == 0) {
+		set_move(mo, cnt, li, co, li + dx, co);
+		if ((1 == dx) && (li > 1) || ((-1 == dx) && (li < 6))) {
+			if (get_piece(po, li + 2 * dx, co) == 0) 
+				set_move(mo, cnt++, li, co, li + 2 * dx, co);
+		}
+	}
+
+	if (co > 0) {
+		dest = SQUARE(SQI(square) + dx, SQJ(square) - 1);
+		take = get_piece(po, li + dx, co - 1);
+		if (((EMPTY != take.fig) && (pi.col != take.col)) || (dest == gm->en_passant)) {
+			if (FIG(take) == KING)
+				return true;
+			set_move(gm->moves, gm->move_cnt++, prepare_move_square(square, dest));
+		}
+	}
+
+	if (co < 7) {
+		dest = SQUARE(SQI(square) + dx, SQJ(square) + 1);
+		take = get_piece(gm->board, dest);
+		if (((0 != take) && (COL(take) != color)) || (dest == gm->en_passant)) {
+			if (FIG(take) == KING)
+				return true;
+			set_move(gm->moves, gm->move_cnt++, prepare_move_square(square, dest));
+		}
+	}
+
+	return false;
+
+}
+
+

@@ -3,13 +3,30 @@
 
 #include <stdbool.h>
 
+#define OO_ {WHITE, EMPTY}
+
+#define WN_ {WHITE, KNIGHT}
+#define WB_ {WHITE, BISHOP}
+#define WR_ {WHITE, ROOK}
+#define WQ_ {WHITE, QUEEN}
+#define WP_ {WHITE, PAWN}
+#define WK_ {WHITE, KING}
+
+#define BN_ {BLACK, KNIGHT}
+#define BB_ {BLACK, BISHOP}
+#define BR_ {BLACK, ROOK}
+#define BQ_ {BLACK, QUEEN}
+#define BP_ {BLACK, PAWN}
+#define BK_ {BLACK, KING}
+
 enum figure {
+	EMPTY  = 0,
 	KNIGHT = 1,
 	BISHOP = 2,
 	ROOK   = 3,
 	QUEEN  = 4,
 	PAWN   = 5,
-	KING   = 6,
+	KING   = 6
 } __attribute__((packed));
 
 enum color {
@@ -18,51 +35,34 @@ enum color {
 } __attribute__((packed));
 
 struct piece {
-	enum color col;
-	enum figure fig;
-} __attribute__((packed));
-
-struct square {
-	int8_t lin : 3;
-	int8_t col : 3;
+	enum color col  : 1;
+	enum figure fig : 3;
 } __attribute__((packed));
 
 struct move {
-	struct square start;
-	struct square stop;
-	uint8_t promote : 2;
+	int8_t lin1 : 3;
+	int8_t col1 : 3;
+	int8_t lin2 : 3;
+	int8_t col2 : 3;
+	enum color promo_col  : 1;
+	enum figure promo_fig : 3;
 } __attribute__((packed));
 
-
-extern const struct piece WN;
-extern const struct piece WB;
-extern const struct piece WR;
-extern const struct piece WQ;
-extern const struct piece WK;
-
-extern const struct piece BN;
-extern const struct piece BB;
-extern const struct piece BR;
-extern const struct piece BQ;
-extern const struct piece BK;
-
 struct position {
-    uint32_t board[8];
-    uint8_t  castle     : 4;
-    uint8_t  en_passant : 3;  /* column */
-    uint8_t  king       : 2;  /* 1: latest is OO, 2: OOO */
-    uint8_t  turn       : 1;  /* 0: white, 1 black */
+    uint8_t board[32];
+    uint8_t castle     : 4;
+    uint8_t a_passe    : 1;  /* elle a passé la jeune fille */
+    uint8_t en_passant : 3;  /* column */
+    uint8_t king       : 2;  /* 1: latest is OO, 2: OOO */
+    uint8_t turn       : 1;  /* 0: white, 1 black */
 } __attribute__((packed));
 
 extern struct piece default_board[8][8];
 
 char to_char(const struct piece pi);
-
-struct piece get_piece(struct position *po, struct square sq);
-void set_piece(struct position *po, struct square sq, struct piece pi);
-
+struct piece get_piece(struct position *po, int8_t li, int8_t co);
+void set_piece(struct position *po, int8_t li, int8_t co, struct piece pi);
 void print_pos(struct position *po);
-
 bool list_moves(struct position *po);
 void print_move(struct move mo);
 
