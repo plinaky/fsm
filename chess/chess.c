@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <string.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include "rules.h"
@@ -7,6 +6,8 @@
 int main(void)
 {
 	struct position po;
+	uint64_t cnt = 0;
+	struct move moves[200];
 	int8_t i, j;
 
 	for (i = 0; i < 8; i++)
@@ -22,5 +23,25 @@ int main(void)
 	printf("move     %ld \n", sizeof(struct move));
 	printf("position %ld \n", sizeof(struct position));
 
+	po.castle = 7;
+	po.a_passe = 0;
+	po.turn = WHITE;
+
+	list_moves(&po, (struct move *)moves, &cnt);
+
+//	printf("found %ld moves\n", cnt);
+ 
+	for (i = 0; i < cnt; i++)
+		print_move(moves[i]);
+
+	printf("\n");
+
+	po.turn = BLACK;
+	list_moves(&po, (struct move *)moves, &cnt);
+
+	for (; i < cnt; i++)
+		print_move(moves[i]);
+
+	printf("\n");
 	return 0;
 }

@@ -40,10 +40,10 @@ struct piece {
 } __attribute__((packed));
 
 struct move {
-	int8_t lin1 : 3;
-	int8_t col1 : 3;
-	int8_t lin2 : 3;
-	int8_t col2 : 3;
+	uint8_t lin1 : 3;
+	uint8_t col1 : 3;
+	uint8_t lin2 : 3;
+	uint8_t col2 : 3;
 	enum color promo_col  : 1;
 	enum figure promo_fig : 3;
 } __attribute__((packed));
@@ -54,7 +54,7 @@ struct position {
     uint8_t a_passe    : 1;  /* elle a passé la jeune fille */
     uint8_t en_passant : 3;  /* column */
     uint8_t king       : 2;  /* 1: latest is OO, 2: OOO */
-    uint8_t turn       : 1;  /* 0: white, 1 black */
+    enum color turn    : 1;  /* 0: white, 1 black */
 } __attribute__((packed));
 
 extern struct piece default_board[8][8];
@@ -63,7 +63,7 @@ char to_char(const struct piece pi);
 struct piece get_piece(struct position *po, int8_t li, int8_t co);
 void set_piece(struct position *po, int8_t li, int8_t co, struct piece pi);
 void print_pos(struct position *po);
-bool list_moves(struct position *po);
+bool list_moves(struct position *po, struct move *mo, uint64_t *cnt);
 void print_move(struct move mo);
 
 #endif
