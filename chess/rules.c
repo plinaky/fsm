@@ -21,9 +21,9 @@ struct piece default_board[8][8] = {
 	{WP_, WB_, WP_, WQ_, WP_, WP_, WB_, WP_},
 	{WN_, OO_, OO_, WP_, OO_, WN_, WP_, OO_},
 	{OO_, BB_, OO_, OO_, OO_, OO_, OO_, OO_},
-	{OO_, WP_, BP_, BP_, BP_, BP_, OO_, OO_},
+	{OO_, BP_, BP_, BP_, BP_, BP_, OO_, OO_},
 	{BN_, OO_, OO_, OO_, BB_, BN_, OO_, OO_},
-	{BP_, BP_, OO_, BQ_, OO_, BP_, BP_, BP_},
+	{BP_, WP_, OO_, BQ_, OO_, BP_, BP_, BP_},
 	{BR_, OO_, OO_, OO_, BK_, OO_, OO_, BR_}
 };
 
@@ -109,16 +109,41 @@ void print_move(struct move mo)
 {
 	print_square(mo.lin1, mo.col1);
 	print_square(mo.lin2, mo.col2);
+	if (EMPTY != mo.promo_fig) {
+		struct piece pi;
+		pi.col = mo.promo_col;
+		pi.fig = mo.promo_fig;
+		printf("%c", to_char(pi));
+	}
 	printf(" ");
 }
+
 static inline void set_move(struct move *mo, uint64_t *cnt, int8_t lin1, int8_t col1, int8_t lin2, int8_t col2)
 {
 	mo[*cnt].lin1 = lin1;
 	mo[*cnt].col1 = col1;
 	mo[*cnt].lin2 = lin2;
 	mo[*cnt].col2 = col2;
+	mo[*cnt].promo_col = WHITE;
+	mo[*cnt].promo_fig = EMPTY;
 	(*cnt)++;
 }
+
+static inline void set_promo(struct move *mo, uint64_t *cnt, int8_t lin1, int8_t col1, int8_t lin2, int8_t col2, enum color col)
+{
+	enum figure fig;
+
+	for (fig = KNIGHT; fig <= QUEEN; fig++) {
+		mo[*cnt].lin1 = lin1;
+		mo[*cnt].col1 = col1;
+		mo[*cnt].lin2 = lin2;
+		mo[*cnt].col2 = col2;
+		mo[*cnt].promo_col = col;
+		mo[*cnt].promo_fig = fig;
+		(*cnt)++;
+	}
+}
+
 
 static bool pawn_moves(struct position *po, int8_t li, int8_t co, struct move *mo, uint64_t *cnt)
 {
@@ -142,7 +167,10 @@ static bool pawn_moves(struct position *po, int8_t li, int8_t co, struct move *m
 
 		take = get_piece(po, li + dx, co);
 		if (EMPTY == take.fig) {
-			set_move(mo, cnt, li, co, li + dx, co);
+			if ((1 == dx) && (li < 6) || ((-1 == dx) && (li > 1)))
+				set_move(mo, cnt, li, co, li + dx, co);
+			else
+				set_promo(mo, cnt, li, co, li + dx, co, pi.col);
 			if ((1 == dx) && (1 == li) || ((-1 == dx) && (6 == li))) {
 				take = get_piece(po, li + 2 * dx, co);
 				if (EMPTY == take.fig)
@@ -155,7 +183,10 @@ static bool pawn_moves(struct position *po, int8_t li, int8_t co, struct move *m
 			if ((EMPTY != take.fig) && (pi.col != take.col)) {
 				if (KING == take.fig)
 					return true;
-				set_move(mo, cnt, li, co, li + dx, co - 1);
+				if ((1 == dx) && (li < 6) || ((-1 == dx) && (li > 1)))
+					set_move(mo, cnt, li, co, li + dx, co - 1);
+				else
+					set_promo(mo, cnt, li, co, li + dx, co - 1, pi.col);
 			}
 
 			if ((po->a_passe) && (co - 1 == po->en_passant) && (li + dx == epl))
@@ -167,7 +198,10 @@ static bool pawn_moves(struct position *po, int8_t li, int8_t co, struct move *m
 			if ((EMPTY != take.fig) && (pi.col != take.col)) {
 				if (KING == take.fig)
 					return true;
-				set_move(mo, cnt, li, co, li + dx, co + 1);
+				if ((1 == dx) && (li < 6) || ((-1 == dx) && (li > 1)))
+					set_move(mo, cnt, li, co, li + dx, co + 1);
+				else
+					set_promo(mo, cnt, li, co, li + dx, co + 1, pi.col);
 			}
 
 			if ((po->a_passe) && (co + 1 == po->en_passant) && (li + dx == epl))

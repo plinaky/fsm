@@ -31,7 +31,7 @@ int main(void)
 	po.en_passant = 2; 
 	cnt = 0;
 	list_moves(&po, (struct move *)moves, &cnt);
-	printf("found %ld moves : ", cnt);
+	printf("\nfound %ld moves : ", cnt);
 	for (k = 0; k < cnt; k++)
 		print_move(moves[k]);
 
@@ -39,7 +39,7 @@ int main(void)
 	po.a_passe = 0;
 	cnt = 0;
 	list_moves(&po, (struct move *)moves, &cnt);
-	printf("found %ld moves : ", cnt);
+	printf("\nfound %ld moves : ", cnt);
 	for (k = 0; k < cnt; k++)
 		print_move(moves[k]);
 	printf("\n");
