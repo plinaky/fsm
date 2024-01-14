@@ -24,7 +24,15 @@ int main(void)
 	printf("move     %ld \n", sizeof(struct move));
 	printf("position %ld \n", sizeof(struct position));
 
-	po.castle = 15;
+	po.W_OO_1 = 1;
+	po.W_OOO_1 = 1;
+	po.B_OO_1 = 1;
+	po.B_OOO_1 = 1;
+
+	po.W_OO_2 = 0;
+	po.W_OOO_2 = 0;
+	po.B_OO_2 = 0;
+	po.B_OOO_2 = 0;
 
 	po.turn = WHITE;
 	po.a_passe = 0;

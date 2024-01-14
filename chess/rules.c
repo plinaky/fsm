@@ -148,7 +148,7 @@ static inline void set_promo(struct move *mo, uint64_t *cnt, int8_t lin1, int8_t
 static bool pawn_moves(struct position *po, int8_t li, int8_t co, struct move *mo, uint64_t *cnt)
 {
 	struct piece pi, take;
-	int8_t dx, epl /* en passant line */, ghost;
+	int8_t dx, epl /* en passant line */;
 
 	pi = get_piece(po, li, co);
 
@@ -158,11 +158,9 @@ static bool pawn_moves(struct position *po, int8_t li, int8_t co, struct move *m
 	if (BLACK == pi.col) {
 		dx = -1;
 		epl = 2;
-		ghost = 0;
 	} else {
 		dx = 1;
 		epl = 5;
-		ghost = 7;
 	}
 
 	if ((li + dx >= 0) && (li + dx <= 7)) {
@@ -183,10 +181,11 @@ static bool pawn_moves(struct position *po, int8_t li, int8_t co, struct move *m
 
 
 		if (co > 0) {
-			if ((1 == po->king) && ((li + dx) == ghost) && ((co - 1) == 5))
-				return true;
 
-			if ((2 == po->king) && ((li + dx) == ghost) && ((co - 1) == 3))
+			if (((1 == po->B_OO_2) && ((li + dx) == 0) && ((co - 1) == 5)) ||
+			 ((1 == po->W_OO_2) && ((li + dx) == 7) && ((co - 1) == 5)) ||
+			 ((1 == po->B_OOO_2) && ((li + dx) == 0) && ((co - 1) == 3)) ||
+			 ((1 == po->W_OOO_2) && ((li + dx) == 7) && ((co - 1) == 3)))
 				return true;
 
 			take = get_piece(po, li + dx, co - 1);
@@ -205,10 +204,10 @@ static bool pawn_moves(struct position *po, int8_t li, int8_t co, struct move *m
 
 		if (co < 7) {
 
-			if ((1 == po->king) && ((li + dx) == ghost) && ((co + 1) == 5))
-				return true;
-
-			if ((2 == po->king) && ((li + dx) == ghost) && ((co + 1) == 3))
+			if (((1 == po->B_OO_2) && ((li + dx) == 0) && ((co - 1) == 5)) ||
+			 ((1 == po->W_OO_2) && ((li + dx) == 7) && ((co - 1) == 5)) ||
+			 ((1 == po->B_OOO_2) && ((li + dx) == 0) && ((co - 1) == 3)) ||
+			 ((1 == po->W_OOO_2) && ((li + dx) == 7) && ((co - 1) == 3)))
 				return true;
 
 			take = get_piece(po, li + dx, co + 1);
@@ -234,7 +233,7 @@ static bool pawn_moves(struct position *po, int8_t li, int8_t co, struct move *m
 static bool kk_moves(struct position *po, int8_t li, int8_t co, struct move *mo, uint64_t *cnt)
 {
 	struct piece pi, take;
-	int8_t index, x, y, start, stop, ghost;
+	int8_t index, x, y, start, stop;
 	int8_t moves[16][2] = {
 		{ 1,  2},
 		{ 1, -2},
@@ -267,22 +266,16 @@ static bool kk_moves(struct position *po, int8_t li, int8_t co, struct move *mo,
 		return false;
 	}
 
-	if (BLACK == pi.col)
-		ghost = 0;
-	else
-		ghost = 7;
-
-
 	for (index = start ; index < stop ; index++) {
 		x = li + moves[index][0];
 		y = co + moves[index][1];
 
 		if ((x >= 0) && (x <= 7) && (y >= 0) && (y <= 7)) {
 
-			if ((1 == po->king) && (x == ghost) && (5 == y))
-				return true;
-
-			if ((2 == po->king) && (x == ghost) && (3 == y))
+			if (((1 == po->B_OO_2) && (x == 0) && (y == 5)) ||
+			 ((1 == po->W_OO_2) && (x == 7) && (y == 5)) ||
+			 ((1 == po->B_OOO_2) && (x == 0) && (y == 3)) ||
+			 ((1 == po->W_OOO_2) && (x == 7) && (y == 3)))
 				return true;
 
 			take = get_piece(po, x, y);
@@ -303,7 +296,7 @@ static bool kk_moves(struct position *po, int8_t li, int8_t co, struct move *mo,
 static bool brq_moves(struct position *po, int8_t li, int8_t co, struct move *mo, uint64_t *cnt)
 {
 	struct piece pi, take;
-	int8_t cnt1, cnt2, start, stop, x, y, ghost;
+	int8_t cnt1, cnt2, start, stop, x, y;
 	int8_t offsets[8][2] = {
 		{ 1,  1},
 		{ 1, -1},
@@ -330,11 +323,6 @@ static bool brq_moves(struct position *po, int8_t li, int8_t co, struct move *mo
 		return false;
 	}
 
-	if (BLACK == pi.col)
-		ghost = 0;
-	else
-		ghost = 7;
-
 	for (cnt1 = start ; cnt1 < stop; cnt1++) {
 		for (cnt2 = 1 ; cnt2 < 8 ; cnt2++) {
 			x = li + cnt2 * offsets[cnt1][0];
@@ -342,10 +330,10 @@ static bool brq_moves(struct position *po, int8_t li, int8_t co, struct move *mo
 
 			if ((x >= 0) && (x <= 7) && (y >= 0) && (y <= 7)) {
 
-				if ((1 == po->king) && (x == ghost) && (5 == y))
-					return true;
-
-				if ((2 == po->king) && (x == ghost) && (3 == y))
+				if (((1 == po->B_OO_2) && (x == 0) && (y == 5)) ||
+				((1 == po->W_OO_2) && (x == 7) && (y == 5)) ||
+				((1 == po->B_OOO_2) && (x == 0) && (y == 3)) ||
+				((1 == po->W_OOO_2) && (x == 7) && (y == 3)))
 					return true;
 
 				take = get_piece(po, x, y);
@@ -378,16 +366,16 @@ static bool castle_moves(struct position *po, int8_t li, int8_t co, struct move 
 	if (pi.fig != KING)
 		return false;
 
-	castle = (po->castle >> ((int8_t)(po->turn) * 2)) & 0x3;
-
-	if (castle & 1) {
+	if (((WHITE == po->turn) && (po->W_OO_1)) ||
+			((BLACK == po->turn) && (po->B_OO_1))) {
 		t1 = get_piece(po, li, co + 1);
 		t2 = get_piece(po, li, co + 2);
 		if ((EMPTY == t1.fig) && (EMPTY == t2.fig))
 			set_move(mo, cnt, li, co, li, co + 2);
 	}
 
-	if (castle & 2) {
+	if (((WHITE == po->turn) && (po->W_OOO_1)) ||
+			((BLACK == po->turn) && (po->B_OOO_1))) {
 		t1 = get_piece(po, li, co - 1);
 		t2 = get_piece(po, li, co - 2);
 		t2 = get_piece(po, li, co - 3);
@@ -420,4 +408,99 @@ bool list_moves(struct position *po, struct move *mo, uint64_t *cnt)
 	}
 
 	return false;
+}
+
+static void apply_move(struct position *po, struct move mo)
+{
+	struct piece pi1, pi2, pi3;
+	int8_t dx;
+
+	pi2.col = WHITE;
+	pi2.fig = EMPTY;
+
+	if (EMPTY != mo.promo_fig) {
+		pi1.col = mo.promo_col;
+		pi1.fig = mo.promo_fig;
+	} else {
+		pi1 = get_piece(po, mo.lin1, mo.col1);
+	}
+	set_piece(po, mo.lin1, mo.col1, pi2);
+	if (po->a_passe) {
+		if (BLACK == po->turn)
+			dx = 1;
+		else
+			dx = -1;
+		set_piece(po, mo.lin2 + dx, mo.col2, pi1);
+		po->a_passe = 0;
+		po->en_passant = 0;
+	}
+	set_piece(po, mo.lin2, mo.col2, pi1);
+
+	if ((KING == pi1.fig) && (WHITE == pi1.col)) {
+		po->W_OO_1 = 0;
+		po->W_OOO_1 = 0;
+		pi3.col = WHITE;
+		pi3.fig = ROOK;
+		if (mo.col1 + 2 == mo.col2) {
+			po->W_OO_2 = 1;
+			set_piece(po, mo.lin2, mo.col1 + 1, pi3);
+			set_piece(po, mo.lin2, 7, pi2);
+		} else if (mo.col1 + 2 == mo.col2) {
+			po->W_OOO_2 = 1;
+			set_piece(po, mo.lin2, mo.col2 + 1, pi3);
+			set_piece(po, mo.lin2, 0, pi2);
+		}
+	} else {
+		po->W_OO_2 = 0;
+		po->W_OOO_2 = 0;
+	}
+
+	if ((ROOK == pi1.fig) && (0 == mo.lin1) && (0 == mo.col1))
+		po->W_OOO_1 = 0;
+
+	if ((ROOK == pi1.fig) && (0 == mo.lin1) && (7 == mo.col1))
+		po->W_OO_1 = 0;
+
+	if ((ROOK == pi1.fig) && (7 == mo.lin1) && (0 == mo.col1))
+		po->B_OOO_1 = 0;
+
+	if ((ROOK == pi1.fig) && (7 == mo.lin1) && (7 == mo.col1))
+		po->B_OO_1 = 0;
+
+	po->a_passe = 0;
+	po->en_passant = 0;
+	if ((PAWN == pi1.fig) && ((mo.lin2 == mo.lin1 + 2) || (mo.lin1 == mo.lin2 + 2))) {
+		po->a_passe = 1;
+		po->en_passant = mo.col1;
+	}
+}
+
+bool list_legal_moves(struct position *po, struct move *mo, uint64_t *cnt)
+{
+	struct move mo1[200];
+	struct move mo2[200];
+	uint64_t cnt1 = 0, cnt2 = 0;
+	bool res;
+
+	res = list_moves(po, (struct move *)mo1, &cnt1);
+	if (true == res)
+		return true;
+
+	for (uint8_t i = 0; i < cnt1; i++) {
+		struct position next;
+		memcpy(&next, po, sizeof(struct position));
+		next.turn = BLACK - next.turn;
+		apply_move(&next, mo1[i]);
+		res = list_moves(po, (struct move *)(mo2), &cnt2);
+		if (res) {
+			memmove(mo1 + i, mo1 + i + 1, sizeof(struct move) * (cnt1 - i - 1));
+			cnt1--;
+		}
+
+	}
+	memcpy(mo, mo1, cnt1 * sizeof(struct move));
+	*cnt += cnt1;
+
+	return false;
+
 }

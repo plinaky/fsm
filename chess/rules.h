@@ -50,10 +50,16 @@ struct move {
 
 struct position {
     uint8_t board[32];
-    uint8_t castle     : 4;
+    uint8_t B_OO_1     : 1;
+    uint8_t B_OOO_1    : 1;
+    uint8_t W_OO_1     : 1;
+    uint8_t W_OOO_1    : 1;
+    uint8_t B_OO_2     : 1;
+    uint8_t B_OOO_2    : 1;
+    uint8_t W_OO_2     : 1;
+    uint8_t W_OOO_2    : 1;
     uint8_t a_passe    : 1;  /* elle a passé la jeune fille */
     uint8_t en_passant : 3;  /* column */
-    uint8_t king       : 2;  /* 1: latest is OO, 2: OOO */
     enum color turn    : 1;  /* 0: white, 1 black */
 } __attribute__((packed));
 
