@@ -18,12 +18,6 @@ int main(void)
 
 	print_pos(&po);
 
-	printf("figure   %ld \n", sizeof(enum figure));
-	printf("color    %ld \n", sizeof(enum color));
-	printf("piece    %ld \n", sizeof(struct piece));
-	printf("move     %ld \n", sizeof(struct move));
-	printf("position %ld \n", sizeof(struct position));
-
 	po.W_OO_1 = 1;
 	po.W_OOO_1 = 1;
 	po.B_OO_1 = 1;
@@ -38,19 +32,13 @@ int main(void)
 	po.a_passe = 0;
 	po.en_passant = 2; 
 	cnt = 0;
-	list_moves(&po, (struct move *)moves, &cnt);
-	printf("\nfound %ld moves : ", cnt);
-	for (k = 0; k < cnt; k++)
-		print_move(moves[k]);
+	//list_legal_moves(&po, (struct move *)moves, &cnt);
 
 	po.turn = BLACK;
 	po.a_passe = 0;
 	cnt = 0;
-	list_moves(&po, (struct move *)moves, &cnt);
-	printf("\nfound %ld moves : ", cnt);
-	for (k = 0; k < cnt; k++)
-		print_move(moves[k]);
-	printf("\n");
+	list_legal_moves(&po, (struct move *)moves, &cnt);
+	//print_moves((struct moves *)moves, cnt);
 
 	return 0;
 }

@@ -16,7 +16,7 @@ struct piece default_board[8][8] = {
 };
 */
 
-struct piece default_board[8][8] = {
+struct piece test_board[8][8] = {
 	{WR_, OO_, OO_, OO_, WK_, OO_, OO_, WR_},
 	{WP_, WB_, WP_, WQ_, WP_, WP_, WB_, WP_},
 	{WN_, OO_, OO_, WP_, OO_, WN_, WP_, OO_},
@@ -26,6 +26,18 @@ struct piece default_board[8][8] = {
 	{BP_, WP_, OO_, BQ_, OO_, BP_, BP_, BP_},
 	{BR_, OO_, OO_, OO_, BK_, OO_, OO_, BR_}
 };
+
+struct piece default_board[8][8] = {
+	{OO_, OO_, OO_, OO_, WK_, OO_, OO_, OO_},
+	{OO_, OO_, OO_, OO_, OO_, OO_, OO_, OO_},
+	{OO_, WN_, WB_, OO_, OO_, OO_, OO_, WR_},
+	{OO_, OO_, OO_, OO_, WQ_, OO_, WB_, OO_},
+	{WR_, OO_, OO_, OO_, OO_, OO_, OO_, OO_},
+	{WN_, BK_, WN_, WN_, WN_, WN_, WN_, WN_},
+	{WP_, WP_, WP_, WP_, WP_, WP_, WP_, WP_},
+	{BR_, BN_, BB_, BQ_, OO_, BB_, BN_, BR_}
+};
+
 
 char to_char(const struct piece pi)
 {
@@ -71,8 +83,7 @@ void print_pos(struct position *po)
 	char inv_start[] = "\x1b[7m";
 	char inv_stop[]  = "\x1b[0m";
 
-	printf("\n\t    a   b   c   d   e   f   g   h\n");
-	printf("\t   -------------------------------\n");
+	printf("\t    a  b  c  d  e  f  g  h\n");
 
 	for (int i = 7; i >= 0; i--) {
 
@@ -87,14 +98,10 @@ void print_pos(struct position *po)
 			if ((i + j) % 2)
 				printf("%s", inv_stop);
 
-			printf("|");
 		}
-
-		printf(" %d\n", i + 1);
-		printf("\t   -------------------------------\n");
+		printf("| %d\n", i + 1);
 	}
 
-	printf("\t    a   b   c   d   e   f   g   h\n");
 }
 
 static void print_square(uint8_t li, uint8_t co)
@@ -114,9 +121,24 @@ void print_move(struct move mo)
 		pi.col = mo.promo_col;
 		pi.fig = mo.promo_fig;
 		printf("%c", to_char(pi));
+	} else {
+		printf(" ");
 	}
 	printf(" ");
 }
+
+void print_moves(struct move *mo, uint64_t cnt)
+{
+	uint64_t k;
+	printf("\n");
+	for (k = 0; k < cnt; k++) {
+		print_move(mo[k]);
+		if (k % 20 == 19)
+			printf("\n");
+	}
+	printf("\n");
+}
+
 
 static inline void set_move(struct move *mo, uint64_t *cnt, int8_t lin1, int8_t col1, int8_t lin2, int8_t col2)
 {
@@ -473,6 +495,7 @@ static void apply_move(struct position *po, struct move mo)
 		po->a_passe = 1;
 		po->en_passant = mo.col1;
 	}
+	po->turn = BLACK - po->turn;
 }
 
 bool list_legal_moves(struct position *po, struct move *mo, uint64_t *cnt)
@@ -489,17 +512,19 @@ bool list_legal_moves(struct position *po, struct move *mo, uint64_t *cnt)
 	for (uint8_t i = 0; i < cnt1; i++) {
 		struct position next;
 		memcpy(&next, po, sizeof(struct position));
-		next.turn = BLACK - next.turn;
 		apply_move(&next, mo1[i]);
-		res = list_moves(po, (struct move *)(mo2), &cnt2);
+		cnt2 = 0;
+		res = list_moves(&next, (struct move *)(mo2), &cnt2);
 		if (res) {
 			memmove(mo1 + i, mo1 + i + 1, sizeof(struct move) * (cnt1 - i - 1));
 			cnt1--;
 		}
-
+		print_pos(&next);
+		print_moves((struct move *)mo2, cnt2);
 	}
 	memcpy(mo, mo1, cnt1 * sizeof(struct move));
 	*cnt += cnt1;
+	print_moves((struct move *)mo1, cnt1);
 
 	return false;
 
