@@ -16,8 +16,6 @@ int main(void)
 		}
 	}
 
-	print_pos(&po);
-
 	po.W_OO_1 = 1;
 	po.W_OOO_1 = 1;
 	po.B_OO_1 = 1;
@@ -27,18 +25,17 @@ int main(void)
 	po.W_OOO_2 = 0;
 	po.B_OO_2 = 0;
 	po.B_OOO_2 = 0;
-
+/*
 	po.turn = WHITE;
 	po.a_passe = 0;
 	po.en_passant = 2; 
 	cnt = 0;
-	//list_legal_moves(&po, (struct move *)moves, &cnt);
-
+	list_legal_moves(&po, (struct move *)moves, &cnt);
+*/
 	po.turn = BLACK;
 	po.a_passe = 0;
 	cnt = 0;
 	list_legal_moves(&po, (struct move *)moves, &cnt);
-	//print_moves((struct moves *)moves, cnt);
 
 	return 0;
 }

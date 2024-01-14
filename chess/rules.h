@@ -71,7 +71,5 @@ void set_piece(struct position *po, int8_t li, int8_t co, struct piece pi);
 void print_pos(struct position *po);
 bool list_moves(struct position *po, struct move *mo, uint64_t *cnt);
 bool list_legal_moves(struct position *po, struct move *mo, uint64_t *cnt);
-void print_move(struct move mo);
-void print_moves(struct move *mo, uint64_t cnt);
 
 #endif
