@@ -148,7 +148,7 @@ static inline void set_promo(struct move *mo, uint64_t *cnt, int8_t lin1, int8_t
 static bool pawn_moves(struct position *po, int8_t li, int8_t co, struct move *mo, uint64_t *cnt)
 {
 	struct piece pi, take;
-	int8_t dx, epl;
+	int8_t dx, epl /* en passant line */, ghost;
 
 	pi = get_piece(po, li, co);
 
@@ -158,9 +158,11 @@ static bool pawn_moves(struct position *po, int8_t li, int8_t co, struct move *m
 	if (BLACK == pi.col) {
 		dx = -1;
 		epl = 2;
+		ghost = 0;
 	} else {
 		dx = 1;
 		epl = 5;
+		ghost = 7;
 	}
 
 	if ((li + dx >= 0) && (li + dx <= 7)) {
@@ -171,6 +173,7 @@ static bool pawn_moves(struct position *po, int8_t li, int8_t co, struct move *m
 				set_move(mo, cnt, li, co, li + dx, co);
 			else
 				set_promo(mo, cnt, li, co, li + dx, co, pi.col);
+
 			if ((1 == dx) && (1 == li) || ((-1 == dx) && (6 == li))) {
 				take = get_piece(po, li + 2 * dx, co);
 				if (EMPTY == take.fig)
@@ -178,7 +181,14 @@ static bool pawn_moves(struct position *po, int8_t li, int8_t co, struct move *m
 			}
 		}
 
+
 		if (co > 0) {
+			if ((1 == po->king) && ((li + dx) == ghost) && ((co - 1) == 5))
+				return true;
+
+			if ((2 == po->king) && ((li + dx) == ghost) && ((co - 1) == 3))
+				return true;
+
 			take = get_piece(po, li + dx, co - 1);
 			if ((EMPTY != take.fig) && (pi.col != take.col)) {
 				if (KING == take.fig)
@@ -194,7 +204,15 @@ static bool pawn_moves(struct position *po, int8_t li, int8_t co, struct move *m
 		}
 
 		if (co < 7) {
+
+			if ((1 == po->king) && ((li + dx) == ghost) && ((co + 1) == 5))
+				return true;
+
+			if ((2 == po->king) && ((li + dx) == ghost) && ((co + 1) == 3))
+				return true;
+
 			take = get_piece(po, li + dx, co + 1);
+
 			if ((EMPTY != take.fig) && (pi.col != take.col)) {
 				if (KING == take.fig)
 					return true;
@@ -205,7 +223,7 @@ static bool pawn_moves(struct position *po, int8_t li, int8_t co, struct move *m
 			}
 
 			if ((po->a_passe) && (co + 1 == po->en_passant) && (li + dx == epl))
-				set_move(mo, cnt, li, co, li + dx, co - 1);
+				set_move(mo, cnt, li, co, li + dx, co + 1);
 		}
 
 	}
@@ -216,7 +234,7 @@ static bool pawn_moves(struct position *po, int8_t li, int8_t co, struct move *m
 static bool kk_moves(struct position *po, int8_t li, int8_t co, struct move *mo, uint64_t *cnt)
 {
 	struct piece pi, take;
-	int8_t index, x, y, start, stop;
+	int8_t index, x, y, start, stop, ghost;
 	int8_t moves[16][2] = {
 		{ 1,  2},
 		{ 1, -2},
@@ -249,10 +267,24 @@ static bool kk_moves(struct position *po, int8_t li, int8_t co, struct move *mo,
 		return false;
 	}
 
+	if (BLACK == pi.col)
+		ghost = 0;
+	else
+		ghost = 7;
+
+
 	for (index = start ; index < stop ; index++) {
 		x = li + moves[index][0];
 		y = co + moves[index][1];
+
 		if ((x >= 0) && (x <= 7) && (y >= 0) && (y <= 7)) {
+
+			if ((1 == po->king) && (x == ghost) && (5 == y))
+				return true;
+
+			if ((2 == po->king) && (x == ghost) && (3 == y))
+				return true;
+
 			take = get_piece(po, x, y);
 			if (EMPTY == take.fig) {
 				set_move(mo, cnt, li, co, x, y);
@@ -261,6 +293,7 @@ static bool kk_moves(struct position *po, int8_t li, int8_t co, struct move *mo,
 					return true;
 				set_move(mo, cnt, li, co, x, y);
 			}
+
 		}
 	}
 
@@ -270,7 +303,7 @@ static bool kk_moves(struct position *po, int8_t li, int8_t co, struct move *mo,
 static bool brq_moves(struct position *po, int8_t li, int8_t co, struct move *mo, uint64_t *cnt)
 {
 	struct piece pi, take;
-	int8_t cnt1, cnt2, start, stop, x, y;
+	int8_t cnt1, cnt2, start, stop, x, y, ghost;
 	int8_t offsets[8][2] = {
 		{ 1,  1},
 		{ 1, -1},
@@ -297,11 +330,24 @@ static bool brq_moves(struct position *po, int8_t li, int8_t co, struct move *mo
 		return false;
 	}
 
+	if (BLACK == pi.col)
+		ghost = 0;
+	else
+		ghost = 7;
+
 	for (cnt1 = start ; cnt1 < stop; cnt1++) {
 		for (cnt2 = 1 ; cnt2 < 8 ; cnt2++) {
 			x = li + cnt2 * offsets[cnt1][0];
 			y = co + cnt2 * offsets[cnt1][1];
+
 			if ((x >= 0) && (x <= 7) && (y >= 0) && (y <= 7)) {
+
+				if ((1 == po->king) && (x == ghost) && (5 == y))
+					return true;
+
+				if ((2 == po->king) && (x == ghost) && (3 == y))
+					return true;
+
 				take = get_piece(po, x, y);
 				if (EMPTY == take.fig) {
 					set_move(mo, cnt, li, co, x, y);
