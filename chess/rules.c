@@ -537,7 +537,7 @@ bool list_legal_moves(struct position *po, struct move *mo, uint16_t *cnt)
 	res = list_moves(po, (struct move *)mo1, &cnt1);
 	if (true == res) {
 		synthesis((struct move *)mo1, cnt1, po);
-		printf("Check !\n");
+		printf("*********************  ERROR   *********************** !\n");
 		return res;
 	}
 
@@ -567,21 +567,24 @@ bool play_game(struct position *po)
 	bool res;
 
 
-	for (i = 0; i < 100; i++) {
+	for (i = 0; i < 200; i++) {
 		res = list_legal_moves(po, mo, &cnt);
-		//synthesis(mo, cnt, po);
-		if (res) {
-			synthesis(mo, cnt, po);
-			printf("Checkmate or draw at move %d!\n", i);
-			return true;
+		if (0 == cnt) {
+			if (res) {
+				//printf("******* CHECKMATE at move %d! **************\n", i);
+				//synthesis(mo, cnt, po);
+				return false;
+			 } else {
+				printf("******* DRAW at move %d!      **************\n", i);
+				synthesis(mo, cnt, po);
+				return true;
+			 }
 		}
 		r = rand() % cnt;
-		// print_move(mo[r], po);
-		// printf("\n");
 		apply_move(po, mo[r]);
 	}
 
-	synthesis(mo, cnt, po);
-	printf("Null game\n");
+	//printf("******* NO WIN after move %d!      **************\n", i);
+	//synthesis(mo, cnt, po);
 	return false;
 }
