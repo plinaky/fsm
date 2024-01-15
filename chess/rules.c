@@ -101,6 +101,7 @@ void print_moves(struct move *mo, uint16_t cnt, struct position *po)
 
 void synthesis(struct move *mo, uint16_t cnt, struct position *po)
 {
+	int8_t i, j;
 	uint8_t k, l;
 
 	char inv_start[] = "\x1b[7m";
@@ -114,11 +115,11 @@ void synthesis(struct move *mo, uint16_t cnt, struct position *po)
 
 	printf("\n");
 
-	for (int i = 7; i >= 0; i--) {
+	for (i = 7; i >= 0; i--) {
 
 		printf("%d ", i + 1);
 
-		for (int j = 0; j < 8; j++) {
+		for (j = 0; j < 8; j++) {
 
 			if ((i + j) % 2)
 				printf("%s", inv_start);
@@ -130,8 +131,10 @@ void synthesis(struct move *mo, uint16_t cnt, struct position *po)
 		}
 
 		printf("   ");
+
 		for (l = 0; ((k + l) < cnt) && (l < 20); l++) 
 			print_move(mo[k + l], po);
+
 		k += l;
 		printf("\n");
 	}
@@ -291,7 +294,7 @@ static bool kk_moves(struct position *po, int8_t li, int8_t co, struct move *mo,
 		return false;
 	}
 
-	for (index = start ; index < stop ; index++) {
+	for (index = start; index < stop; index++) {
 		x = li + moves[index][0];
 		y = co + moves[index][1];
 
@@ -349,7 +352,7 @@ static bool brq_moves(struct position *po, int8_t li, int8_t co, struct move *mo
 		return false;
 	}
 
-	for (cnt1 = start ; cnt1 < stop; cnt1++) {
+	for (cnt1 = start; cnt1 < stop; cnt1++) {
 		for (cnt2 = 1 ; cnt2 < 8 ; cnt2++) {
 			x = li + cnt2 * offsets[cnt1][0];
 			y = co + cnt2 * offsets[cnt1][1];
@@ -424,13 +427,10 @@ static bool list_moves(struct position *po, struct move *mo, uint16_t *cnt)
 		for (i = 0; i < 8; i++) {
 			pi = get_piece(po, i, j);
 			if ((EMPTY != pi.fig) && (pi.col == po->turn)) {
-				if (pawn_moves(po, i, j, mo, cnt))
-					return true;
-				else if (kk_moves(po, i, j, mo, cnt))
-					return true;
-				else if (brq_moves(po, i, j, mo, cnt))
-					return true;
-				else if (castle_moves(po, i, j, mo, cnt))
+				if ((pawn_moves(po, i, j, mo, cnt)) ||
+				    (kk_moves(po, i, j, mo, cnt))   ||
+				    (brq_moves(po, i, j, mo, cnt))  ||
+				    (castle_moves(po, i, j, mo, cnt)))
 					return true;
 			}
 		}
@@ -526,9 +526,11 @@ void apply_move(struct position *po, struct move mo)
 
 bool list_legal_moves(struct position *po, struct move *mo, uint16_t *cnt)
 {
+	struct position next;
 	struct move mo1[200];
 	struct move mo2[200];
 	uint16_t cnt1, cnt2;
+	uint8_t i;
 	bool res;
 
 	*cnt = 0;
@@ -536,11 +538,10 @@ bool list_legal_moves(struct position *po, struct move *mo, uint16_t *cnt)
 	if (true == res) {
 		synthesis((struct move *)mo1, cnt1, po);
 		printf("Check !\n");
-		return true;
+		return res;
 	}
 
-	for (uint8_t i = 0; i < cnt1; i++) {
-		struct position next;
+	for (i = 0; i < cnt1; i++) {
 		memcpy(&next, po, sizeof(struct position));
 		apply_move(&next, mo1[i]);
 		res = list_moves(&next, (struct move *)(mo2), &cnt2);
@@ -554,8 +555,8 @@ bool list_legal_moves(struct position *po, struct move *mo, uint16_t *cnt)
 	memcpy(mo, mo1, cnt1 * sizeof(struct move));
 	*cnt = cnt1;
 
-	/* true means checkmate or draw */
-	return (0 == cnt1);
+	/* means checkmate */
+	return res;
 }
 
 bool play_game(struct position *po)
