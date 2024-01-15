@@ -2,6 +2,7 @@
 #define RULES_H
 
 #include <stdbool.h>
+#include <stdint.h>
 
 #define OO_ {WHITE, EMPTY}
 
@@ -63,13 +64,13 @@ struct position {
     enum color turn    : 1;  /* 0: white, 1 black */
 } __attribute__((packed));
 
-extern struct piece default_board[8][8];
-
+void set_piece(struct position *po, uint8_t li, uint8_t co, struct piece pi);
+struct piece get_piece(struct position *po, uint8_t li, uint8_t co);
 char to_char(const struct piece pi);
-struct piece get_piece(struct position *po, int8_t li, int8_t co);
-void set_piece(struct position *po, int8_t li, int8_t co, struct piece pi);
-void print_pos(struct position *po);
-bool list_moves(struct position *po, struct move *mo, uint64_t *cnt);
-bool list_legal_moves(struct position *po, struct move *mo, uint64_t *cnt);
+void print_moves(struct move *mo, uint16_t cnt, struct position *po);
+void synthesis(struct move *mo, uint16_t cnt, struct position *po);
+void apply_move(struct position *po, struct move mo);
+bool list_legal_moves(struct position *po, struct move *mo, uint16_t *cnt);
+bool play_game(struct position *po);
 
 #endif
