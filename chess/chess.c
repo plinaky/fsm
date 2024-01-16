@@ -50,31 +50,21 @@ int main(void)
 
 	printf("position %lu \n", sizeof(struct position));
 	printf("square %lu \n", sizeof(struct square));
-	printf("piece2 %lu \n", sizeof(struct piece2));
-	printf("move2 %lu \n", sizeof(struct move2));
-	printf("castle_right %lu \n", sizeof(struct castle_right));
-	printf("position2 %lu \n", sizeof(struct position2));
+	printf("piece %lu \n", sizeof(struct piece));
+	printf("move %lu \n", sizeof(struct move));
+	
 
-	/*
 	srand(time(NULL));   // Initialization, should only be called once.
 
-	p1.W_OO_1 = 1;
-	p1.W_OOO_1 = 1;
-	p1.B_OO_1 = 1;
-	p1.B_OOO_1 = 1;
-
-	p1.W_OO_2 = 0;
-	p1.W_OOO_2 = 0;
-	p1.B_OO_2 = 0;
-	p1.B_OOO_2 = 0;
-
+	p1.wcr = ALL_CR;
+	p1.bcr = ALL_CR;
 	p1.turn = WHITE;
-	p1.a_passe = 0;
-	p1.en_passant = 0; 
+	p1.special.col = WHITE;
+	p1.special.fig = EMPTY;
 
 	for (i = 0; i < 8; i++)
 		for (j = 0; j < 8; j++)
-			set_piece(&p1, i, j, board1[i][j]);
+			p1.board1[i][j] = board1[i][j];
 
 	gettimeofday(&start_time, NULL);
 
@@ -90,6 +80,6 @@ int main(void)
 			printf("mps %ld\n", move_total / elapsed_time);
 		}
 	}
-*/
+
 	return 0;
 }
