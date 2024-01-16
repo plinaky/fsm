@@ -48,6 +48,14 @@ int main(void)
 	uint64_t elapsed_time;
 	int8_t i, j;
 
+	printf("position %lu \n", sizeof(struct position));
+	printf("square %lu \n", sizeof(struct square));
+	printf("piece2 %lu \n", sizeof(struct piece2));
+	printf("move2 %lu \n", sizeof(struct move2));
+	printf("castle_right %lu \n", sizeof(struct castle_right));
+	printf("position2 %lu \n", sizeof(struct position2));
+
+	/*
 	srand(time(NULL));   // Initialization, should only be called once.
 
 	p1.W_OO_1 = 1;
@@ -82,6 +90,6 @@ int main(void)
 			printf("mps %ld\n", move_total / elapsed_time);
 		}
 	}
-
+*/
 	return 0;
 }

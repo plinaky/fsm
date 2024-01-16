@@ -1,0 +1,6 @@
+* s'installer sur un repo git dédié
+* améliorations de code
+  - factoriser le déplacer pion x > 0, x < 7
+  - supprimer OO_2 et OOO_2 
+
+

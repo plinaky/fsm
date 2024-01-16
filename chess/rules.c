@@ -359,10 +359,8 @@ static bool brq_moves(struct position *po, int8_t li, int8_t co, struct move *mo
 				if (((1 == po->B_OO_2) && (x == 0) && (y == 5)) ||
 				((1 == po->W_OO_2) && (x == 7) && (y == 5)) ||
 				((1 == po->B_OOO_2) && (x == 0) && (y == 3)) ||
-				((1 == po->W_OOO_2) && (x == 7) && (y == 3))) {
+				((1 == po->W_OOO_2) && (x == 7) && (y == 3)))
 					return true;
-					set_move(mo, cnt, li, co, x, y);
-				}
 
 				take = get_piece(po, x, y);
 				if (EMPTY == take.fig) {
@@ -572,14 +570,14 @@ uint16_t play_game(struct position *po)
 	for (i = 0; i < 100; i++) {
 		res = list_legal_moves(po, mo, &cnt);
 		if (0 == cnt) {
-			return i;
-			//if (res) {
+			if (res) {
 				//printf("******* CHECKMATE at move %d! **************\n", i);
 				//synthesis(mo, cnt, po);
-			// } else {
-				//printf("******* DRAW at move %d!      **************\n", i);
-				//synthesis(mo, cnt, po);
-			// }
+			} else {
+				printf("******* DRAW at move %d!      **************\n", i);
+				synthesis(mo, cnt, po);
+			 }
+			return i;
 		}
 		r = rand() % cnt;
 		apply_move(po, mo[r]);
