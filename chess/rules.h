@@ -71,6 +71,6 @@ void print_moves(struct move *mo, uint16_t cnt, struct position *po);
 void synthesis(struct move *mo, uint16_t cnt, struct position *po);
 void apply_move(struct position *po, struct move mo);
 bool list_legal_moves(struct position *po, struct move *mo, uint16_t *cnt);
-bool play_game(struct position *po);
+uint16_t play_game(struct position *po);
 
 #endif

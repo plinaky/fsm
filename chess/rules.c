@@ -84,7 +84,7 @@ static void print_move(struct move mo, struct position *po)
  		more += 2;
  	}
 
- 	while(more-- > 0)
+ 	while (more-- > 0)
  		printf(" ");
 }
 
@@ -210,7 +210,6 @@ static bool pawn_moves(struct position *po, int8_t li, int8_t co, struct move *m
 			 ((1 == po->W_OO_2) && ((li + dx) == 7) && ((co - 1) == 5)) ||
 			 ((1 == po->B_OOO_2) && ((li + dx) == 0) && ((co - 1) == 3)) ||
 			 ((1 == po->W_OOO_2) && ((li + dx) == 7) && ((co - 1) == 3))) {
-				set_move(mo, cnt, li, co, li + dx, co - 1);
 				return true;
 			}
 
@@ -234,7 +233,6 @@ static bool pawn_moves(struct position *po, int8_t li, int8_t co, struct move *m
 			 ((1 == po->W_OO_2) && ((li + dx) == 7) && ((co + 1) == 5)) ||
 			 ((1 == po->B_OOO_2) && ((li + dx) == 0) && ((co + 1) == 3)) ||
 			 ((1 == po->W_OOO_2) && ((li + dx) == 7) && ((co + 1) == 3))) {
-				set_move(mo, cnt, li, co, li + dx, co + 1);
 				return true;
 			}
 
@@ -304,16 +302,15 @@ static bool kk_moves(struct position *po, int8_t li, int8_t co, struct move *mo,
 			 ((1 == po->W_OO_2) && (x == 7) && (y == 5)) ||
 			 ((1 == po->B_OOO_2) && (x == 0) && (y == 3)) ||
 			 ((1 == po->W_OOO_2) && (x == 7) && (y == 3))) {
-				set_move(mo, cnt, li, co, x, y);
 				return true;
 			}
 			take = get_piece(po, x, y);
 			if (EMPTY == take.fig) {
 				set_move(mo, cnt, li, co, x, y);
 			} else if (pi.col != take.col) {
-				set_move(mo, cnt, li, co, x, y);
 				if (KING == take.fig)
 					return true;
+				set_move(mo, cnt, li, co, x, y);
 			}
 
 		}
@@ -363,17 +360,17 @@ static bool brq_moves(struct position *po, int8_t li, int8_t co, struct move *mo
 				((1 == po->W_OO_2) && (x == 7) && (y == 5)) ||
 				((1 == po->B_OOO_2) && (x == 0) && (y == 3)) ||
 				((1 == po->W_OOO_2) && (x == 7) && (y == 3))) {
-					set_move(mo, cnt, li, co, x, y);
 					return true;
+					set_move(mo, cnt, li, co, x, y);
 				}
 
 				take = get_piece(po, x, y);
 				if (EMPTY == take.fig) {
 					set_move(mo, cnt, li, co, x, y);
 				} else if (pi.col != take.col) {
-					set_move(mo, cnt, li, co, x, y);
 					if (KING == take.fig)
 						return true;
+					set_move(mo, cnt, li, co, x, y);
 					break;
 				} else {
 					break;
@@ -545,11 +542,17 @@ bool list_legal_moves(struct position *po, struct move *mo, uint16_t *cnt)
 		memcpy(&next, po, sizeof(struct position));
 		apply_move(&next, mo1[i]);
 		res = list_moves(&next, (struct move *)(mo2), &cnt2);
-		if (res) {
+		if ((res) && (cnt1 > 0)) {
 			memmove(&mo1[i], &mo1[i + 1], sizeof(struct move) * (cnt1 - i - 1));
 			cnt1--;
 			i--;
 		}
+	}
+
+	if (0 == cnt1) {
+		memcpy(&next, po, sizeof(struct position));
+		next.turn =  BLACK - next.turn;
+		res = list_moves(&next, (struct move *)(mo2), &cnt2);
 	}
 
 	memcpy(mo, mo1, cnt1 * sizeof(struct move));
@@ -559,26 +562,24 @@ bool list_legal_moves(struct position *po, struct move *mo, uint16_t *cnt)
 	return res;
 }
 
-bool play_game(struct position *po)
+uint16_t play_game(struct position *po)
 {
 	int r;
 	uint16_t cnt, i;
 	struct move mo[200];
 	bool res;
 
-
-	for (i = 0; i < 200; i++) {
+	for (i = 0; i < 100; i++) {
 		res = list_legal_moves(po, mo, &cnt);
 		if (0 == cnt) {
-			if (res) {
+			return i;
+			//if (res) {
 				//printf("******* CHECKMATE at move %d! **************\n", i);
 				//synthesis(mo, cnt, po);
-				return false;
-			 } else {
-				printf("******* DRAW at move %d!      **************\n", i);
-				synthesis(mo, cnt, po);
-				return true;
-			 }
+			// } else {
+				//printf("******* DRAW at move %d!      **************\n", i);
+				//synthesis(mo, cnt, po);
+			// }
 		}
 		r = rand() % cnt;
 		apply_move(po, mo[r]);
@@ -586,5 +587,5 @@ bool play_game(struct position *po)
 
 	//printf("******* NO WIN after move %d!      **************\n", i);
 	//synthesis(mo, cnt, po);
-	return false;
+	return i;
 }

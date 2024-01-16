@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <string.h>
 #include <time.h>
 #include <stdlib.h>
+#include <sys/time.h>
 #include "rules.h"
 
 struct piece board1[8][8] = {
@@ -15,7 +17,7 @@ struct piece board1[8][8] = {
 	{BP_, BP_, BP_, BP_, BP_, BP_, BP_, BP_},
 	{BR_, BN_, BB_, BQ_, BK_, BB_, BN_, BR_}
 };
-
+/*
 struct piece board2[8][8] = {
 	{WR_, OO_, OO_, OO_, WK_, OO_, OO_, WR_},
 	{WP_, WB_, WP_, WQ_, WP_, WP_, WB_, WP_},
@@ -37,36 +39,48 @@ struct piece board3[8][8] = {
 	{WP_, WP_, WP_, WP_, WP_, WP_, WP_, WP_},
 	{BR_, BN_, BB_, BQ_, OO_, BB_, BN_, BR_}
 };
-
+*/
 int main(void)
 {
-	struct position po;
+	struct timeval start_time, end_time;
+	struct position p0, p1;
+	uint64_t k, move_total = 0;
+	uint64_t elapsed_time;
 	int8_t i, j;
-	uint64_t k, l;
 
 	srand(time(NULL));   // Initialization, should only be called once.
 
-	for (k = 0; k < 0xFFFFFFFFFFFFFFFF; k++) {
-		for (i = 0; i < 8; i++)
-			for (j = 0; j < 8; j++)
-				set_piece(&po, i, j, board1[i][j]);
+	p1.W_OO_1 = 1;
+	p1.W_OOO_1 = 1;
+	p1.B_OO_1 = 1;
+	p1.B_OOO_1 = 1;
 
-		po.W_OO_1 = 1;
-		po.W_OOO_1 = 1;
-		po.B_OO_1 = 1;
-		po.B_OOO_1 = 1;
+	p1.W_OO_2 = 0;
+	p1.W_OOO_2 = 0;
+	p1.B_OO_2 = 0;
+	p1.B_OOO_2 = 0;
 
-		po.W_OO_2 = 0;
-		po.W_OOO_2 = 0;
-		po.B_OO_2 = 0;
-		po.B_OOO_2 = 0;
+	p1.turn = WHITE;
+	p1.a_passe = 0;
+	p1.en_passant = 0; 
 
-		po.turn = WHITE;
-		po.a_passe = 0;
-		po.en_passant = 0; 
+	for (i = 0; i < 8; i++)
+		for (j = 0; j < 8; j++)
+			set_piece(&p1, i, j, board1[i][j]);
 
-		if (play_game(&po))
-			printf("Game %ld\n", k);
+	gettimeofday(&start_time, NULL);
+
+	for (k = 1; k < 0xFFFFFFFFFFFFFF; k++) {
+
+		memcpy(&p0, &p1, sizeof(struct position));
+		
+		move_total += play_game(&p0);
+
+		if ((move_total % 300000) > 299900) {		
+			gettimeofday(&end_time, NULL);
+			elapsed_time = 2 * (end_time.tv_sec - start_time.tv_sec);
+			printf("mps %ld\n", move_total / elapsed_time);
+		}
 	}
 
 	return 0;
