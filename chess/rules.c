@@ -4,6 +4,21 @@
 #include <time.h>
 #include <stdlib.h>
 
+static inline bool in_bound(int8_t x, int8_t y)
+{
+	return (0 <= x) && (x < 8) && (0 <= y) && (y < 8);
+}
+
+static inline bool on_bound(int8_t x)
+{
+	return (0 == x) || (x == 8);
+}
+
+static inline bool same_square(struct square sq1, struct square sq2)
+{
+	return (sq1.x == sq2.x) && (sq1.y == sq2.y);
+}
+
 char to_char(enum color co, enum figure fi)
 {
 	char c = ' ';
@@ -21,37 +36,38 @@ char to_char(enum color co, enum figure fi)
 	return c;
 }
 
-static inline void print_square(struct square *sq)
+static inline void print_square(struct square sq)
 {
 	printf("%c%d",
-	       'a' + (char)(sq->y),
-	        1  + sq->x
+	       'a' + (char)(sq.y),
+	        1  + sq.x
 	       );
 }
-
-static void print_move(struct move *mo)
+static void print_move(struct position *po, struct move *mo)
 {
-	printf("%c", to_char(pi1));
+	struct piece *p1 = &(po->board[mo->sq[0].x][mo->sq[0].y]);
+	struct piece *p2 = &(po->board[mo->sq[1].x][mo->sq[1].y]);
 
-	print_square(&mo->sq1);
+	printf("%c", to_char(WHITE, p1->fig));
 
-	if (mo->pi1.col != mo->pi2.col)
+	print_square(mo->sq[0]);
+
+	if ((EMPTY != pi2->fig) || (same_square(mo->sq[1], po->special)))
 		printf("x");
 	else
 		printf("-");
 
-	print_square(&mo->sq2);
+	print_square(mo->sq[1]);
 
- 	if (mo->pi1.fig != mo->pi2.fig)
- 		printf("=%c", to_char(WHITE, mo->pi1.fig));
+ 	if (EMPTY != mo->promo)
+ 		printf("=%c", to_char(WHITE, mo->promo));
  	else
  		printf("  ");
 }
 
 void synthesis(struct position *po, struct move *mo, uint16_t cnt)
 {
-	int8_t i, j;
-	uint8_t k, l;
+	uint8_t i, j, k, l;
 
 	char inv_start[] = "\x1b[7m";
 	char inv_stop[]  = "\x1b[0m";
@@ -89,57 +105,33 @@ void synthesis(struct position *po, struct move *mo, uint16_t cnt)
 			print_move(mo[k + l], po);
 
 		k += l;
+
 		printf("\n");
 	}
 
 
 }
 
-static inline void set_move(struct move *mo, struct  )
-{
-	mo[*cnt].lin1 = lin1;
-	mo[*cnt].col1 = col1;
-	mo[*cnt].lin2 = lin2;
-	mo[*cnt].col2 = col2;
-	mo[*cnt].promo_col = WHITE;
-	mo[*cnt].promo_fig = EMPTY;
-	(*cnt)++;
-}
-
-static inline void set_promo(struct move *mo, uint16_t *cnt, int8_t lin1, int8_t col1, int8_t lin2, int8_t col2, enum color col)
-{
-	enum figure fig;
-
-	for (fig = KNIGHT; fig <= QUEEN; fig++) {
-		mo[*cnt].lin1 = lin1;
-		mo[*cnt].col1 = col1;
-		mo[*cnt].lin2 = lin2;
-		mo[*cnt].col2 = col2;
-		mo[*cnt].promo_col = col;
-		mo[*cnt].promo_fig = fig;
-		(*cnt)++;
-	}
-}
-
-
-static bool pawn_moves(struct position *po, int8_t li, int8_t co, struct move *mo, uint16_t *cnt)
+static bool pawn_moves(struct position *po, struct square *sq, struct move_list *ml)
 {
 	struct piece pi, take;
-	int8_t dx, epl /* en passant line */;
-
-	pi = get_piece(po, li, co);
+	int8_t dx, x, y;
 
 	if (pi.fig != PAWN)
 		return false;
 
 	if (BLACK == pi.col) {
 		dx = -1;
-		epl = 2;
 	} else {
 		dx = 1;
-		epl = 5;
 	}
 
+	for (x = sq->x; x != sq + 2 * dx; x += dx) {
+		if (on_bound(x) && (EMPTY == po->board[x][y].fig)) {
+
+			
+		}
+	}
 	if ((li + dx >= 0) && (li + dx <= 7)) {
 
 		take = get_piece(po, li + dx, co);

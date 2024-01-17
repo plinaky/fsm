@@ -56,7 +56,12 @@ struct square {
 
 struct move {
     struct square sq[2];
-    struct piece pi[2];
+	enum figure promo : 3;
+};
+
+struct move_list {
+    struct move list[255];
+    uint8_t cnt;
 };
 
 struct position {
