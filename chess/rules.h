@@ -50,23 +50,14 @@ struct piece {
 	enum figure fig : 3;
 };
 
-struct square {
-    int8_t x, y;
-};
-
 struct move {
-    struct square sq[2];
+    int8_t x1, y1, x2, y2;
 	enum figure promo : 3;
-};
-
-struct move_list {
-    struct move list[255];
-    uint8_t cnt;
 };
 
 struct position {
     struct piece board[8][8];
-    struct square special;
+    int8_t x, y;
     enum color turn          : 1;
     enum castling_rights wcr : 2;
     enum castling_rights bcr : 2;

@@ -14,9 +14,68 @@ static inline bool on_bound(int8_t x)
 	return (0 == x) || (x == 8);
 }
 
-static inline bool same_square(struct square sq1, struct square sq2)
+static inline struct move_of(int8_t x1, int8_t y1, int8_t x2, int8_t y2, enum figure fig)
 {
-	return (sq1.x == sq2.x) && (sq1.y == sq2.y);
+	struct move mo;
+
+	mo.sq1.x = (uint8_t)x1;
+	mo.sq1.y = (uint8_t)y1;
+	mo.sq2.x = (uint8_t)x2;
+	mo.sq2.y = (uint8_t)y2;
+	mo.promo = fig;
+
+	return mo;
+}
+
+static inline void set_single_move(struct move *mo, int8_t x1, int8_t y1, int8_t x2, int8_t y2, enum figure fig)
+{
+	mo->x1    = x1;
+	mo->y1    = y1;
+	mo->x2    = x2;
+	mo->y2    = y2;
+	mo->promo = fig;
+}
+
+
+enum move_type {
+	KING_TAKE    = 0,
+	MOVE_STOP    = 1,
+	MOVE_ON      = 2,
+}
+
+static enum move_type add_move(struct position *po, struct move *mo, uint8_t *cnt, int8_t x1, int8_t y1, int8_t x2, int8_t y2)
+{
+	if (!in_bound(x2, y2))
+		return MOVE_STOP;
+
+	if ((EMPTY != po->board[x2][y2].fig) && (po->board[x1][y1].col == po->board[x2][y2].col))
+		return MOVE_STOP;
+
+	if ((KING == po->board[x2][y2].fig) || ((x2 == po->board.x) && (y2 == po->board.y) && (on_bound(x2))))
+		return KING_TAKE;
+
+	if (PAWN == po->board[x1][y1].fig) {
+		if (((EMPTY == po->board[x2][y2].fig) && (y1 == y2)) ||
+		    ((EMPTY != po->board[x2][y2].fig) && (y1 != y2))) { 
+			if (on_bound(x2)) { /* pawn promotion */
+				set_single_move(&mo[*cnt++], x1, y1, x2, y2, KNIGHT);
+				set_single_move(&mo[*cnt++], x1, y1, x2, y2, BISHOP);
+				set_single_move(&mo[*cnt++], x1, y1, x2, y2, ROOK  );
+				set_single_move(&mo[*cnt++], x1, y1, x2, y2, QUEEN );
+				return MOVE_STOP;
+			}
+			set_single_move(&mo[*cnt++], x1, y1, x2, y2, EMPTY );
+			return MOVE_ON;
+		}
+		return MOVE_STOP;
+	}
+
+	set_single_move(&mo[*cnt++], x1, y1, x2, y2, EMPTY);
+
+	if (EMPTY != po->board[x2][y2].fig)
+		return MOVE_STOP;
+	else
+		return MOVE_ON;
 }
 
 char to_char(enum color co, enum figure fi)
@@ -36,7 +95,7 @@ char to_char(enum color co, enum figure fi)
 	return c;
 }
 
-static inline void print_square(struct square sq)
+static inline void print_square(int8_t x, int8_t y)
 {
 	printf("%c%d",
 	       'a' + (char)(sq.y),
@@ -45,19 +104,19 @@ static inline void print_square(struct square sq)
 }
 static void print_move(struct position *po, struct move *mo)
 {
-	struct piece *p1 = &(po->board[mo->sq[0].x][mo->sq[0].y]);
-	struct piece *p2 = &(po->board[mo->sq[1].x][mo->sq[1].y]);
+	struct piece *p1 = &(po->board[mo->x1][mo->y1]);
+	struct piece *p2 = &(po->board[mo->x2][mo->y2]);
 
 	printf("%c", to_char(WHITE, p1->fig));
 
-	print_square(mo->sq[0]);
+	print_square(mo->x1, mo->y1);
 
-	if ((EMPTY != pi2->fig) || (same_square(mo->sq[1], po->special)))
+	if ((EMPTY != pi2->fig) || ((mo->x2 == bo->x) && (mo->y2 == bo->y)))
 		printf("x");
 	else
 		printf("-");
 
-	print_square(mo->sq[1]);
+	print_square(mo->x2, mo->y2);
 
  	if (EMPTY != mo->promo)
  		printf("=%c", to_char(WHITE, mo->promo));
@@ -112,153 +171,43 @@ void synthesis(struct position *po, struct move *mo, uint16_t cnt)
 
 }
 
-static bool pawn_moves(struct position *po, struct square *sq, struct move_list *ml)
+static bool add_pkk_moves(struct position *po, int8_t li, int8_t co, struct move *mo, uint8_t *cnt)
 {
-	struct piece pi, take;
-	int8_t dx, x, y;
+	uint8_t i, start, stop;
+	int8_t moves[24][2] = {
+		/* WHITE PAWN */
+		{ 1,  0}, { 2,  0}, { 1, -1}, { 1, -1},
 
-	if (pi.fig != PAWN)
-		return false;
+		/* BLACK PAWN */
+		{-1,  0}, {-2,  0}, {-1, -1}, {-1, -1},
 
-	if (BLACK == pi.col) {
-		dx = -1;
-	} else {
-		dx = 1;
-	}
+		/* KNIGHT */
+		{ 1,  2}, { 1, -2}, { 2,  1}, { 2, -1},
+		{-1,  2}, {-1, -2}, {-2,  1}, {-2, -1},
 
-	for (x = sq->x; x != sq + 2 * dx; x += dx) {
-		if (on_bound(x) && (EMPTY == po->board[x][y].fig)) {
-
-			
-		}
-	}
-	if ((li + dx >= 0) && (li + dx <= 7)) {
-
-		take = get_piece(po, li + dx, co);
-		if (EMPTY == take.fig) {
-			if ((1 == dx) && (li < 6) || ((-1 == dx) && (li > 1)))
-				set_move(mo, cnt, li, co, li + dx, co);
-			else
-				set_promo(mo, cnt, li, co, li + dx, co, pi.col);
-
-			if ((1 == dx) && (1 == li) || ((-1 == dx) && (6 == li))) {
-				take = get_piece(po, li + 2 * dx, co);
-				if (EMPTY == take.fig)
-					set_move(mo, cnt, li, co, li + 2 * dx, co);
-			}
-		}
-
-
-		if (co > 0) {
-
-			if (((1 == po->B_OO_2) && ((li + dx) == 0) && ((co - 1) == 5)) ||
-			 ((1 == po->W_OO_2) && ((li + dx) == 7) && ((co - 1) == 5)) ||
-			 ((1 == po->B_OOO_2) && ((li + dx) == 0) && ((co - 1) == 3)) ||
-			 ((1 == po->W_OOO_2) && ((li + dx) == 7) && ((co - 1) == 3))) {
-				return true;
-			}
-
-			take = get_piece(po, li + dx, co - 1);
-			if ((EMPTY != take.fig) && (pi.col != take.col)) {
-				if ((1 == dx) && (li < 6) || ((-1 == dx) && (li > 1)))
-					set_move(mo, cnt, li, co, li + dx, co - 1);
-				else
-					set_promo(mo, cnt, li, co, li + dx, co - 1, pi.col);
-				if (KING == take.fig)
-					return true;
-			}
-
-			if ((po->a_passe) && (co - 1 == po->en_passant) && (li + dx == epl))
-				set_move(mo, cnt, li, co, li + dx, co - 1);
-		}
-
-		if (co < 7) {
-
-			if (((1 == po->B_OO_2) && ((li + dx) == 0) && ((co + 1) == 5)) ||
-			 ((1 == po->W_OO_2) && ((li + dx) == 7) && ((co + 1) == 5)) ||
-			 ((1 == po->B_OOO_2) && ((li + dx) == 0) && ((co + 1) == 3)) ||
-			 ((1 == po->W_OOO_2) && ((li + dx) == 7) && ((co + 1) == 3))) {
-				return true;
-			}
-
-			take = get_piece(po, li + dx, co + 1);
-
-			if ((EMPTY != take.fig) && (pi.col != take.col)) {
-				if ((1 == dx) && (li < 6) || ((-1 == dx) && (li > 1)))
-					set_move(mo, cnt, li, co, li + dx, co + 1);
-				else
-					set_promo(mo, cnt, li, co, li + dx, co + 1, pi.col);
-				if (KING == take.fig)
-					return true;
-			}
-
-			if ((po->a_passe) && (co + 1 == po->en_passant) && (li + dx == epl))
-				set_move(mo, cnt, li, co, li + dx, co + 1);
-		}
-
-	}
-
-	return false;
-}
-
-static bool kk_moves(struct position *po, int8_t li, int8_t co, struct move *mo, uint16_t *cnt)
-{
-	struct piece pi, take;
-	int8_t index, x, y, start, stop;
-	int8_t moves[16][2] = {
-		{ 1,  2},
-		{ 1, -2},
-		{ 2,  1},
-		{ 2, -1},
-		{-1,  2},
-		{-1, -2},
-		{-2,  1},
-		{-2, -1},
-		{ 1, -1},
-		{ 1,  0},
-		{ 1,  1},
-		{ 0, -1},
-		{ 0,  1},
-		{-1, -1},
-		{-1,  0},
-		{-1,  1}
-
+		/* KING */
+		{ 1, -1}, { 1,  0}, { 1,  1}, { 0, -1},
+		{ 0,  1}, {-1, -1}, {-1,  0}, {-1,  1},
 	};
 
-	pi = get_piece(po, li, co);
-
-	if (KNIGHT == pi.fig) {
-		start = 0;
-		stop = 8;
-	} else if (KING == pi.fig) {
-		start = 8;
-		stop = 16;
-	} else {
+	if (po->turn != po->board[li][co].col)
 		return false;
-	}
 
-	for (index = start; index < stop; index++) {
-		x = li + moves[index][0];
-		y = co + moves[index][1];
+	if ((po->board[li][co].fig == PAWN) && (WHITE == po->board[lin][co].col)) 
+			start = 0, stop  = 4;
+	else if ((po->board[li][co].fig == PAWN) && (BLACK == po->board[lin][co].col)) 
+			start = 4, stop  = 8;
+	else if (po->board[li][co].fig == KNIGHT)
+			start = 8, start = 16;
+	else if (po->board[li][co].fig == KING)
+			start = 16, start = 24;
+	else
+		return false;
 
-		if ((x >= 0) && (x <= 7) && (y >= 0) && (y <= 7)) {
-
-			if (((1 == po->B_OO_2) && (x == 0) && (y == 5)) ||
-			 ((1 == po->W_OO_2) && (x == 7) && (y == 5)) ||
-			 ((1 == po->B_OOO_2) && (x == 0) && (y == 3)) ||
-			 ((1 == po->W_OOO_2) && (x == 7) && (y == 3))) {
-				return true;
-			}
-			take = get_piece(po, x, y);
-			if (EMPTY == take.fig) {
-				set_move(mo, cnt, li, co, x, y);
-			} else if (pi.col != take.col) {
-				if (KING == take.fig)
-					return true;
-				set_move(mo, cnt, li, co, x, y);
-			}
-
-		}
+	for (i = start; i < stop; i++) {
+		x = li + moves[i][0], y = co + moves[i][1];
+		if (add_move(mo, cnt, li, co, x, y) == KING_TAKE)
+			return true;
 	}
 
 	return false;
@@ -266,61 +215,33 @@ static bool kk_moves(struct position *po, int8_t li, int8_t co, struct move *mo,
 
 static bool brq_moves(struct position *po, int8_t li, int8_t co, struct move *mo, uint16_t *cnt)
 {
-	struct piece pi, take;
-	int8_t cnt1, cnt2, start, stop, x, y;
+	int8_t cnt1, cnt2, start, stop;
 	int8_t offsets[8][2] = {
-		{ 1,  1},
-		{ 1, -1},
-		{-1, -1},
-		{-1,  1},
-		{ 0,  1},
-		{ 0, -1},
-		{-1,  0},
-		{ 1,  0}
+		{ 1,  1}, { 1, -1}, {-1, -1}, {-1,  1},
+		{ 0,  1}, { 0, -1}, {-1,  0}, { 1,  0},
 	};
 
-	pi = get_piece(po, li, co);
-
-	if (BISHOP == pi.fig) {
-		start = 0;
-		stop  = 4;
-	} else if (ROOK == pi.fig) {
-		start = 4;
-		stop  = 8;
-	} else if (QUEEN == pi.fig) {
-		start = 0;
-		stop  = 8;
-	} else {
+	if (po->turn != po->board[li][co].col)
 		return false;
-	}
+
+	if (po->board[lin][col].fig == BISHOP)
+			start = 0, start = 8;
+	else if (po->board[lin][col].fig == ROOK)
+			start = 8, start = 16;
+	else if (po->board[lin][col].fig == QUEEN)
+			start = 0, start = 26;
+	else
+		return false;
 
 	for (cnt1 = start; cnt1 < stop; cnt1++) {
 		for (cnt2 = 1 ; cnt2 < 8 ; cnt2++) {
 			x = li + cnt2 * offsets[cnt1][0];
 			y = co + cnt2 * offsets[cnt1][1];
-
-			if ((x >= 0) && (x <= 7) && (y >= 0) && (y <= 7)) {
-
-				if (((1 == po->B_OO_2) && (x == 0) && (y == 5)) ||
-				((1 == po->W_OO_2) && (x == 7) && (y == 5)) ||
-				((1 == po->B_OOO_2) && (x == 0) && (y == 3)) ||
-				((1 == po->W_OOO_2) && (x == 7) && (y == 3)))
-					return true;
-
-				take = get_piece(po, x, y);
-				if (EMPTY == take.fig) {
-					set_move(mo, cnt, li, co, x, y);
-				} else if (pi.col != take.col) {
-					if (KING == take.fig)
-						return true;
-					set_move(mo, cnt, li, co, x, y);
-					break;
-				} else {
-					break;
-				}
-			} else {
+			enum move_type mt = add_move(mo, cnt, li, co, x, y);
+			if (mt == KING_TAKE)
+				return true;
+			else if (mt == MOVE_STOP)
 				break;
-			}
 		}
 	}
 
