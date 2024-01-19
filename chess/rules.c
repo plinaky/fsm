@@ -35,26 +35,26 @@ static inline void print_square(int8_t x, int8_t y)
 	       );
 }
 
-static void print_move(struct position *po, struct move *mo)
+static void print_move(struct position *po, struct move mo)
 {
-	struct piece *p1 = &(po->board[mo->x1][mo->y1]);
-	struct piece *p2 = &(po->board[mo->x2][mo->y2]);
+	struct piece *p1 = &(po->board[mo.x1][mo.y1]);
+	struct piece *p2 = &(po->board[mo.x2][mo.y2]);
 
 	printf("%c", to_char(WHITE, p1->fig));
 
-	print_square(mo->x1, mo->y1);
+	print_square(mo.x1, mo.y1);
 
-	if ((EMPTY != p2->fig) || ((mo->x2 == po->x) && (mo->y2 == po->y)))
+	if ((EMPTY != p2->fig) || ((mo.x2 == po->x) && (mo.y2 == po->y)))
 		printf("x");
 	else
 		printf("-");
 
-	print_square(mo->x2, mo->y2);
+	print_square(mo.x2, mo.y2);
 
- 	if (EMPTY != mo->promo)
- 		printf("=%c", to_char(WHITE, mo->promo));
- 	else
- 		printf("  ");
+ 	if (EMPTY != mo.promo)
+ 		printf("=%c  ", to_char(WHITE, mo.promo));
+	else
+		printf("    ");
 }
 
 void synthesis(struct position *po, struct move *mo, uint8_t cnt)
@@ -65,13 +65,28 @@ void synthesis(struct position *po, struct move *mo, uint8_t cnt)
 	char inv_stop[]  = "\x1b[0m";
 
 	printf("   a  b  c  d  e  f  g  h    ");
-	printf("%s to play \t WHITE CR: %s %s \t BLACK CR: %s %s\n",
-	       (po->turn ? "BLACK" : "WHITE"),
-	       (po->wcr & BIG_CR   ? "OOO" : "xxx"),
-	       (po->wcr & SMALL_CR ? "OO " : "xx "),
-	       (po->bcr & BIG_CR   ? "OOO" : "xxx"),
-	       (po->bcr & SMALL_CR ? "OO " : "xx ")
-	       );
+
+	printf("%s have %2d moves",
+			(po->turn == WHITE ? "WHITE" : "BLACK"),
+			cnt
+	      );
+	printf("  ");
+
+	printf("Wcr:%s.%s    Bcr:%s.%s    ",
+			(po->wcr & SMALL_CR ? "OO"  : "__"),
+			(po->wcr & BIG_CR   ? "OOO" : "___"),
+			(po->bcr & SMALL_CR ? "OO"  : "__"),
+			(po->bcr & BIG_CR   ? "OOO" : "___")
+	      );
+
+	if ((po->x !=0) && (po->y !=0)) {
+		printf("en passant/castle:");
+		print_square(po->x, po->y);
+		printf("    ");
+	}
+
+	printf("\n");
+
 
 	for (i = 7; i >= 0; i--) {
 
@@ -92,12 +107,11 @@ void synthesis(struct position *po, struct move *mo, uint8_t cnt)
 		}
 
 		printf("   ");
-
-		for (l = 0; ((k + l) < cnt) && (l < 15); l++) 
-			print_move(po, &mo[k + l]);
-
-		k += l;
-
+		l = 16;
+		for (k = 0; k < l; k++) {
+			if (((7 - i) + k * 8) < cnt)
+				print_move(po, mo[7 - i + k * 8]);
+		}
 		printf("\n");
 	}
 
@@ -114,21 +128,22 @@ static inline bool on_bound(int8_t x)
 	return (0 == x) || (x == 7);
 }
 
-static inline void set_single_move(struct move *mo, int8_t x1, int8_t y1, int8_t x2, int8_t y2, enum figure fig)
+static inline void set_single_move(struct move *mo, uint8_t *cnt, int8_t x1, int8_t y1, int8_t x2, int8_t y2, enum figure fig)
 {
-	mo->x1    = x1;
-	mo->y1    = y1;
-	mo->x2    = x2;
-	mo->y2    = y2;
-	mo->promo = fig;
+	(mo + *cnt)->x1    = x1;
+	(mo + *cnt)->y1    = y1;
+	(mo + *cnt)->x2    = x2;
+	(mo + *cnt)->y2    = y2;
+	(mo + *cnt)->promo = fig;
+	(*cnt)++;
 }
 
 static void promote(struct position *po, struct move *mo, uint8_t *cnt, int8_t x1, int8_t y1, int8_t x2, int8_t y2)
 {
-	set_single_move(&mo[*cnt++], x1, y1, x2, y2, KNIGHT);
-	set_single_move(&mo[*cnt++], x1, y1, x2, y2, BISHOP);
-	set_single_move(&mo[*cnt++], x1, y1, x2, y2, ROOK  );
-	set_single_move(&mo[*cnt++], x1, y1, x2, y2, QUEEN );
+	set_single_move(mo, cnt, x1, y1, x2, y2, KNIGHT);
+	set_single_move(mo, cnt, x1, y1, x2, y2, BISHOP);
+	set_single_move(mo, cnt, x1, y1, x2, y2, ROOK  );
+	set_single_move(mo, cnt, x1, y1, x2, y2, QUEEN );
 }
 
 static enum move_type add_move(struct position *po, struct move *mo, uint8_t *cnt, int8_t x1, int8_t y1, int8_t x2, int8_t y2)
@@ -159,11 +174,11 @@ static enum move_type add_move(struct position *po, struct move *mo, uint8_t *cn
 			}
 
 			/* standard advance */
-			set_single_move(&mo[*cnt++], x1, y1, x2, y2, EMPTY);
+			set_single_move(mo, cnt, x1, y1, x2, y2, EMPTY);
 
 			/* check advance by 2 at start before returning */
-			if (on_bound(2 * x1 + 1 - x2) && (EMPTY == po->board[2 * x2 - x1][y2].fig))
-				set_single_move(&mo[*cnt++], x1, y1, 2 * x2 - x1, y2, EMPTY);
+			if (on_bound(2 * x1 - x2) && (EMPTY == po->board[2 * x2 - x1][y2].fig))
+				set_single_move(mo, cnt, x1, y1, 2 * x2 - x1, y2, EMPTY);
 		}
 
 		/* take */
@@ -176,7 +191,7 @@ static enum move_type add_move(struct position *po, struct move *mo, uint8_t *cn
 			}
 
 			/* standard take */
-			set_single_move(&mo[*cnt++], x1, y1, x2, y2, EMPTY);
+			set_single_move(mo, cnt, x1, y1, x2, y2, EMPTY);
 		}
 
 		/* to ensure no pawn case further */
@@ -187,7 +202,7 @@ static enum move_type add_move(struct position *po, struct move *mo, uint8_t *cn
 	if ((KING == po->board[x1][y1].fig) && (cr & SMALL_CR) && (y1 + 2 == y2) &&
 			(EMPTY == po->board[x2][y2].fig) &&
 			(EMPTY == po->board[x2][y1 + 1].fig)) { 
-		set_single_move(&mo[*cnt++], x1, y1, x2, y2, EMPTY);
+		set_single_move(mo, cnt, x1, y1, x2, y2, EMPTY);
 		return MOVE_ON;
 	}
 
@@ -195,17 +210,17 @@ static enum move_type add_move(struct position *po, struct move *mo, uint8_t *cn
 			(EMPTY == po->board[x2][1].fig) &&
 			(EMPTY == po->board[x2][y2 + 1].fig) &&
 			(EMPTY == po->board[x2][y2].fig)) { 
-		set_single_move(&mo[*cnt++], x1, y1, x2, y2, EMPTY);
+		set_single_move(mo, cnt, x1, y1, x2, y2, EMPTY);
 		return MOVE_ON;
 	}
 
 	/* anything else */
-	set_single_move(&mo[*cnt++], x1, y1, x2, y2, EMPTY);
+	set_single_move(mo, cnt, x1, y1, x2, y2, EMPTY);
 
-	if (EMPTY != po->board[x2][y2].fig)
-		return MOVE_STOP;
-	else
+	if (EMPTY == po->board[x2][y2].fig)
 		return MOVE_ON;
+	else
+		return MOVE_STOP;
 }
 
 static bool pkk_moves(struct position *po, int8_t li, int8_t co, struct move *mo, uint8_t *cnt)
@@ -229,16 +244,24 @@ static bool pkk_moves(struct position *po, int8_t li, int8_t co, struct move *mo
 		{ 0,  2}, { 0, -2},
 	};
 
-	if ((po->board[li][co].fig == PAWN) && (WHITE == po->board[li][co].col)) 
-			start = 0, stop  = 3;
-	else if ((po->board[li][co].fig == PAWN) && (BLACK == po->board[li][co].col)) 
-			start = 3, stop  = 6;
-	else if (po->board[li][co].fig == KNIGHT)
-			start = 6, start = 14;
-	else if (po->board[li][co].fig == KING)
-			start = 14, start = 24;
-	else
+	if (po->turn != po->board[li][co].col)
 		return false;
+
+	if ((po->board[li][co].fig == PAWN) && (WHITE == po->board[li][co].col)) { 
+		start = 0;
+		stop  = 3;
+	} else if ((po->board[li][co].fig == PAWN) && (BLACK == po->board[li][co].col)) {
+		start = 3;
+		stop  = 6;
+	} else if (po->board[li][co].fig == KNIGHT) {
+		start = 6;
+		stop = 14;
+	} else if (po->board[li][co].fig == KING) {
+		start = 14;
+		stop = 24;
+	} else {
+		return false;
+	}
 
 	for (i = start; i < stop; i++) {
 		x = li + moves[i][0], y = co + moves[i][1];
@@ -257,22 +280,30 @@ static bool brq_moves(struct position *po, int8_t li, int8_t co, struct move *mo
 		{ 0,  1}, { 0, -1}, {-1,  0}, { 1,  0},
 	};
 
-	if (po->board[li][co].fig == BISHOP)
-			start = 0, start = 8;
-	else if (po->board[li][co].fig == ROOK)
-			start = 8, start = 16;
-	else if (po->board[li][co].fig == QUEEN)
-			start = 0, start = 26;
-	else
+	if (po->turn != po->board[li][co].col)
 		return false;
+
+	if (po->board[li][co].fig == BISHOP) {
+		start = 0;
+		stop =  4;
+	} else if (po->board[li][co].fig == ROOK) {
+		start = 4;
+		stop =  8;
+	} else if (po->board[li][co].fig == QUEEN) {
+		start = 0;
+	       	stop =  8;
+	} else {
+		return false;
+	}
 
 	for (cnt1 = start; cnt1 < stop; cnt1++) {
 		for (cnt2 = 1 ; cnt2 < 8 ; cnt2++) {
 			x = li + cnt2 * offsets[cnt1][0];
 			y = co + cnt2 * offsets[cnt1][1];
 			enum move_type mt = add_move(po, mo, cnt, li, co, x, y);
-			if (KING_TAKE == mt)
+			if (KING_TAKE == mt) {
 				return true;
+			}
 			else if (MOVE_STOP == mt)
 				break;
 		}
@@ -287,12 +318,14 @@ static bool list_moves(struct position *po, struct move *mo, uint8_t *cnt)
 	int8_t i, j;
 
 	*cnt = 0;
-	for (j = 0; j < 8; j++) {
-		for (i = 0; i < 8; i++) {
-			if ((po->turn == po->board[i][j].col) &&
-				((pkk_moves(po, i, j, mo, cnt)) || (brq_moves(po, i, j, mo, cnt)))) {
-					return true;
-			}
+
+	for (i = 0; i < 8; i++) {
+		for (j = 0; j < 8; j++) {
+			if (pkk_moves(po, i, j, mo, cnt))
+				return true;
+
+			if (brq_moves(po, i, j, mo, cnt))
+				return true;
 		}
 	}
 	return false;
@@ -300,6 +333,8 @@ static bool list_moves(struct position *po, struct move *mo, uint8_t *cnt)
 
 void apply_move(struct position *po, struct move mo)
 {
+	bool clear_special = true;
+
 	/* king case */
 	if (KING == po->board[mo.x1][mo.y1].fig) {
 
@@ -309,6 +344,7 @@ void apply_move(struct position *po, struct move mo)
 
 			po->x = mo.x2;
 			po->y = mo.y1 + 1;
+			clear_special = false;
 		}
 
 		if (mo.y1 == mo.y2 + 2) {
@@ -317,6 +353,7 @@ void apply_move(struct position *po, struct move mo)
 
 			po->x = mo.x2;
 			po->y = mo.y2 + 1;
+			clear_special = false;
 		}
 
 		if (po->turn == BLACK)
@@ -331,6 +368,7 @@ void apply_move(struct position *po, struct move mo)
 		if ((mo.x1 == mo.x2 + 2) || (mo.x1 + 2 == mo.x2)) {
 			po->x = (mo.x1 + mo.x2) / 2;
 			po->y = mo.y2;
+			clear_special = false;
 		}
 
 		/* pawn take en passant */
@@ -338,8 +376,6 @@ void apply_move(struct position *po, struct move mo)
 			int8_t dx = (WHITE == po->turn ? -1 : 1);
 			po->board[po->x + dx][po->y].fig = EMPTY;
 			po->board[po->x +dx ][po->y].col = WHITE;
-			po->x = 0; 
-			po->y = 0; 
 		}
 	}
 
@@ -360,6 +396,11 @@ void apply_move(struct position *po, struct move mo)
 	po->board[mo.x1][mo.y1].fig = EMPTY;
 	po->board[mo.x1][mo.y1].col = WHITE;
 
+	if (clear_special) {
+		po->x = -1; 
+		po->y = -1; 
+	}
+
 	po->turn = BLACK - po->turn;
 }
 
@@ -369,14 +410,14 @@ bool list_legal_moves(struct position *po, struct move *mo, uint8_t *cnt)
 	struct move mo1[200];
 	struct move mo2[200];
 	uint8_t cnt1, cnt2, i;
-	bool res;
+	bool res = false;
 
 	*cnt = 0;
 	cnt1 = 0;
 	cnt2 = 0;
-	res = list_moves(po, (struct move *)mo1, &cnt1);
+	res = list_moves(po, mo1, &cnt1);
 	if (true == res) {
-		synthesis(po, (struct move *)mo1, cnt1);
+		synthesis(po, mo1, cnt1);
 		printf("*********************  ERROR   *********************** !\n");
 		return res;
 	}
@@ -384,7 +425,7 @@ bool list_legal_moves(struct position *po, struct move *mo, uint8_t *cnt)
 	for (i = 0; i < cnt1; i++) {
 		memcpy(&next, po, sizeof(struct position));
 		apply_move(&next, mo1[i]);
-		res = list_moves(&next, (struct move *)(mo2), &cnt2);
+		res = list_moves(&next, mo2, &cnt2);
 		if ((res) && (cnt1 > 0)) {
 			memmove(&mo1[i], &mo1[i + 1], sizeof(struct move) * (cnt1 - i - 1));
 			cnt1--;
@@ -394,8 +435,8 @@ bool list_legal_moves(struct position *po, struct move *mo, uint8_t *cnt)
 
 	if (0 == cnt1) {
 		memcpy(&next, po, sizeof(struct position));
-		next.turn =  BLACK - next.turn;
-		res = list_moves(&next, (struct move *)(mo2), &cnt2);
+		next.turn = BLACK - next.turn;
+		res = list_moves(&next, mo2, &cnt2);
 	}
 
 	memcpy(mo, mo1, cnt1 * sizeof(struct move));
@@ -415,23 +456,26 @@ uint8_t play_game(struct position *po)
 	cnt = 0;
 	res = 0;
 
-	for (i = 0; i < 100; i++) {
+	for (i = 0; i < 200; i++) {
 		res = list_legal_moves(po, mo, &cnt);
-		synthesis(po, mo, cnt);
 		if (0 == cnt) {
+			synthesis(po, mo, cnt);
 			if (res) {
-				printf("******* CHECKMATE at move %d! **************\n", i);
+				printf("\n******* CHECKMATE at move %d! **************\n\n", i);
 			} else {
-				printf("******* DRAW at move %d!      **************\n", i);
+				printf("\n******* DRAW at move %d!      **************\n\n", i);
 			}
+			getchar();
 			return i;
 		}
 		r = rand() % cnt;
-		print_move(po, &mo[r]);
-		printf("\n");
+		//printf("\nmove %d: %s", i, (po->turn == WHITE ? "" : "     .."));
+		//print_move(po, mo[r]);
+		//printf("\n");
 		apply_move(po, mo[r]);
 	}
 
-	printf("******* NO WIN after move %d!      **************\n", i);
+	//synthesis(po, mo, cnt);
+	//printf("\n******* NO WIN after move %d!      **************\n\n", i);
 	return i;
 }

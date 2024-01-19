@@ -57,8 +57,8 @@ int main(void)
 	p1.wcr = ALL_CR;
 	p1.bcr = ALL_CR;
 	p1.turn = WHITE;
-	p1.x = 0;
-	p1.y = 0;
+	p1.x = -1;
+	p1.y = -1;
 
 	for (i = 0; i < 8; i++) {
 		for (j = 0; j < 8; j++) {
@@ -68,10 +68,8 @@ int main(void)
 
 	gettimeofday(&start_time, NULL);
 
-	memcpy(&p0, &p1, sizeof(struct position));
-	move_total += play_game(&p0);
-/*
-	for (k = 1; k < 0xFFFFFFFFFFFFFF; k++) {
+
+	for (k = 1; k < 0xFFFF; k++) {
 
 		memcpy(&p0, &p1, sizeof(struct position));
 		
@@ -83,6 +81,6 @@ int main(void)
 			printf("mps %ld\n", move_total / elapsed_time);
 		}
 	}
-*/
+
 	return 0;
 }

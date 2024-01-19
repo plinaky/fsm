@@ -21,8 +21,6 @@
 #define BK_ {BLACK, KING}
 
 
-#pragma pack(push, 1)
-
 enum figure {
 	EMPTY  = 0,
 	KNIGHT = 1,
@@ -46,24 +44,22 @@ enum castling_rights {
 };
 
 struct piece {
-	enum color col  : 1;
-	enum figure fig : 3;
+	enum color col;
+	enum figure fig;
 };
 
 struct move {
-    int8_t x1, y1, x2, y2;
-	enum figure promo : 3;
+	int8_t x1, y1, x2, y2;
+	enum figure promo;
 };
 
 struct position {
-    struct piece board[8][8];
-    int8_t x, y;
-    enum color turn          : 1;
-    enum castling_rights wcr : 2;
-    enum castling_rights bcr : 2;
+	struct piece board[8][8];
+	int8_t x, y;
+	enum color turn;
+	enum castling_rights wcr;
+	enum castling_rights bcr;
 };
-
-#pragma pack(pop)
 
 void synthesis(struct position *po, struct move *mo, uint8_t cnt);
 void apply_move(struct position *po, struct move mo);
