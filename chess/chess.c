@@ -49,25 +49,28 @@ int main(void)
 	int8_t i, j;
 
 	printf("position %lu \n", sizeof(struct position));
-	printf("square %lu \n", sizeof(struct square));
 	printf("piece %lu \n", sizeof(struct piece));
 	printf("move %lu \n", sizeof(struct move));
 	
-
 	srand(time(NULL));   // Initialization, should only be called once.
 
 	p1.wcr = ALL_CR;
 	p1.bcr = ALL_CR;
 	p1.turn = WHITE;
-	p1.special.col = WHITE;
-	p1.special.fig = EMPTY;
+	p1.x = 0;
+	p1.y = 0;
 
-	for (i = 0; i < 8; i++)
-		for (j = 0; j < 8; j++)
-			p1.board1[i][j] = board1[i][j];
+	for (i = 0; i < 8; i++) {
+		for (j = 0; j < 8; j++) {
+			p1.board[i][j] = board1[i][j];
+		}
+	}
 
 	gettimeofday(&start_time, NULL);
 
+	memcpy(&p0, &p1, sizeof(struct position));
+	move_total += play_game(&p0);
+/*
 	for (k = 1; k < 0xFFFFFFFFFFFFFF; k++) {
 
 		memcpy(&p0, &p1, sizeof(struct position));
@@ -80,6 +83,6 @@ int main(void)
 			printf("mps %ld\n", move_total / elapsed_time);
 		}
 	}
-
+*/
 	return 0;
 }

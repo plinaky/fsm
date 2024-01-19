@@ -64,10 +64,10 @@ struct position {
 };
 
 #pragma pack(pop)
-char to_char(const struct piece pi);
-void print_moves(struct move *mo, uint16_t cnt, struct position *po);
-void synthesis(struct move *mo, uint16_t cnt, struct position *po);
+
+void synthesis(struct position *po, struct move *mo, uint8_t cnt);
 void apply_move(struct position *po, struct move mo);
-bool list_legal_moves(struct position *po, struct move *mo, uint16_t *cnt);
-uint16_t play_game(struct position *po);
+bool list_legal_moves(struct position *po, struct move *mo, uint8_t *cnt);
+uint8_t play_game(struct position *po);
+
 #endif
