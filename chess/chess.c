@@ -69,7 +69,7 @@ int main(void)
 	gettimeofday(&start_time, NULL);
 
 
-	for (k = 1; k < 0xFFFF; k++) {
+	for (k = 1; k < 2; k++) {
 
 		memcpy(&p0, &p1, sizeof(struct position));
 		
