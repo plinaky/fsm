@@ -21,7 +21,7 @@ enum debug_level {
 };
 
 static enum debug_level chess_debug_level = DEBUG_MOVE;
-static debug_offset = false;
+static bool debug_offset = false;
 
 
 static char to_char(enum color co, enum figure fi)
@@ -150,11 +150,11 @@ static inline bool on_bound(int8_t x)
 
 static inline void set_single_move(struct move *mo, uint8_t *cnt, int8_t x1, int8_t y1, int8_t x2, int8_t y2, enum figure fig)
 {
-	(mo + *cnt)->x1    = x1;
-	(mo + *cnt)->y1    = y1;
-	(mo + *cnt)->x2    = x2;
-	(mo + *cnt)->y2    = y2;
-	(mo + *cnt)->promo = fig;
+	mo[*cnt].x1    = x1;
+	mo[*cnt].y1    = y1;
+	mo[*cnt].x2    = x2;
+	mo[*cnt].y2    = y2;
+	mo[*cnt].promo = fig;
 	(*cnt)++;
 }
 
@@ -171,12 +171,14 @@ static enum move_type add_move(struct position *po, struct move *mo, uint8_t *cn
 	enum castling_rights cr = (po->turn == WHITE ? po->wcr : po->bcr);
 
 	/* immediately discard out of board moves */
-	if (!in_bound(x2, y2))
+	if (!in_bound(x2, y2)) {
 		return MOVE_STOP;
+	}
 
 	/* discard moves if destination is occupied by piece of the same color */
-	if ((EMPTY != po->board[x2][y2].fig) && (po->board[x1][y1].col == po->board[x2][y2].col))
+	if ((EMPTY != po->board[x2][y2].fig) && (po->board[x1][y1].col == po->board[x2][y2].col)) {
 		return MOVE_STOP;
+	}
 
 	/* check cases */
 	if ((KING == po->board[x2][y2].fig) || ((x2 == po->x) && (y2 == po->y) && (on_bound(x2)))) {
@@ -262,7 +264,7 @@ static bool pkk_moves(struct position *po, int8_t li, int8_t co, struct move *mo
 
 		/* KING */
 		{ 1,  1}, { 1, -1}, {-1, -1}, {-1,  1},
-		{ 0,  1}, { 0, -1}, { 1,  0}, {-1,  1},
+		{ 0,  1}, { 0, -1}, { 1,  0}, {-1,  0},
 		{ 0,  2}, { 0, -2},
 	};
 
@@ -437,45 +439,46 @@ bool list_legal_moves(struct position *po, struct move *mo, uint8_t *cnt)
 
 	res = list_moves(po, mo, cnt);
 
-	if (chess_debug_level >= DEBUG_WRONG) {
-		synthesis(po, mo, *cnt);
-	}
-
 	if (true == res) {
-		printf("*********************  ERROR   *********************** !\n");
+		if (chess_debug_level >= DEBUG_WRONG) {
+			printf("*********************  ERROR   *********************** !\n");
+			synthesis(po, mo, *cnt);
+		}
 		return res;
 	}
 
 	for (i = 0; i < *cnt; i++) {
+
 		memcpy(&next, po, sizeof(struct position));
 		apply_move(&next, mo[i]);
 		res = list_moves(&next, mo2, &cnt2);
 
 		if (chess_debug_level >= DEBUG_NEXT) {
-			printf("\texamining move %d / %d: %s", (i + 1), *cnt, (po->turn == WHITE ? "" : "     .."));
-			print_move(po, mo[i]);
-			printf("\n");
+
 			debug_offset = true;
 			synthesis(&next, mo2, cnt2);
 			debug_offset = false;
 		}
 
-		if ((res) && (*cnt > 0)) {
-			if (chess_debug_level >= DEBUG_MOVE) {
-				printf("remove move %d / %d: ", (i + 1), *cnt);
-				print_move(po, mo[i]);
-				printf("\n");
+		if (*cnt > 0) {
+			if (!res) {
+				if (chess_debug_level >= DEBUG_MOVE) {
+					printf("\tmove %3d / %3d: %s", (i + 1), *cnt, (po->turn == WHITE ? "" : "   .."));
+					print_move(po, mo[i]);
+					printf(" : keep");
+					printf("\n");
+				}
+			} else {
+				if (chess_debug_level >= DEBUG_MOVE) {
+					printf("\tmove %3d / %3d: %s", (i + 1), *cnt, (po->turn == WHITE ? "" : "   .."));
+					print_move(po, mo[i]);
+					printf(" : REMOVE");
+					printf("\n");
+				}
+				memmove(&mo[i], &mo[i + 1], sizeof(struct move) * ((*cnt) - i - 1));
+				(*cnt)--;
+				i--; /* in position of last operation of the loop ! */
 			}
-			memmove(&mo[i], &mo[i + 1], sizeof(struct move) * ((*cnt) - i - 1));
-			cnt--;
-			i--; /* in position of last operation of the loop ! */
-		} else if (*cnt > 0) {
-			if (chess_debug_level >= DEBUG_MOVE) {
-				printf("keep move %d / %d: ", i, *cnt);
-				print_move(po, mo[i]);
-				printf("\n");
-			}
-
 		}
 	}
 
@@ -500,16 +503,18 @@ uint8_t play_game(struct position *po)
 	cnt = 0;
 	res = 0;
 
-	for (i = 0; i < 60; i++) {
+	for (i = 0; i < 250; i++) {
 		res = list_legal_moves(po, mo, &cnt);
 		if (chess_debug_level >= DEBUG_MOVE)
 			synthesis(po, mo, cnt);
 		if (0 == cnt) {
 			if (res) {
 				if (chess_debug_level >= DEBUG_MAT)
+					synthesis(po, mo, cnt);
 					printf("\n******* CHECKMATE at move %d! **************\n\n", i);
 			} else {
 				if (chess_debug_level >= DEBUG_PAT)
+					synthesis(po, mo, cnt);
 					printf("\n******* DRAW at move %d!      **************\n\n", i);
 			}
 			//getchar();
