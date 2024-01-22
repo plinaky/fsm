@@ -51,6 +51,8 @@ bool pawn_moves(struct board *bo, uint8_t x, uint8_t y, uint16_t *ml, uint8_t *c
 			if (on_bound(x + dx))
 				promote(bo, ml, cnt);
 		}
+		if (!(FIG(pi2)) && (x + dx == bo->hx) && (y + dy == bo->hy))
+			ml[(*cnt)++] = MOVE_OF(x, y, x + dx, y + dy, 0, 1);
 	}
 
 	return false;
