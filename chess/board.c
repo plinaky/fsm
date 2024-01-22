@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
-#include "board.h"
 #include <stdlib.h>
+#include "board.h"
 
 bool in_bound(int8_t x, int8_t y)
 {
@@ -30,38 +30,32 @@ char to_char(uint8_t pi)
 	return c;
 }
 
-void print_square(uint8_t sq)
+void print_square(uint8_t x, uint8_t y)
 {
-	uint8_t x = sq & 0b111;
-	char y    = (sq >> 3) & 0b111;
-
-	printf("%c%d", y + 'a', x + 1);
+	printf("%c%d", (char)y + 'a', x + 1);
 }
 
-uint8_t square_of(uint8_t x, uint8_t y)
+uint8_t get_piece(struct board *bo, int8_t x, int8_t y)
 {
-	return (((y & 0b111) << 3) |  (x & 0b111)) & 0xFF;
+	if (in_bound(x, y)) {
+		uint8_t index  =  (8 * x + y) / 2;
+		uint8_t offset = ((8 * x + y) % 2) << 2; 
+
+		return (bo->pos[index] >> offset) & 0b1111;
+	}
+
+	return 0;
 }
 
-uint8_t get_piece(struct board *bo, uint8_t sq)
+void set_piece(struct board *bo, int8_t x, int8_t y, uint8_t pi)
 {
-	uint8_t x = sq & 0b111;
-	uint8_t y = (sq >> 3) & 0b111;
-	uint8_t index  =  (8 * x + y) / 2;
-	uint8_t offset = ((8 * x + y) % 2) << 2; 
+	if (in_bound(x, y)) {
+		uint8_t index  =  (8 * x + y) / 2;
+		uint8_t offset = ((8 * x + y) % 2) * 4; 
 
-	return (bo->pos[index] >> offset) & 0b1111;
-}
-
-void set_piece(struct board *bo, uint8_t sq, uint8_t pi)
-{
-	uint8_t x = sq & 0b111;
-	uint8_t y = (sq >> 3) & 0b111;
-	uint8_t index  =  (8 * x + y) / 2;
-	uint8_t offset = ((8 * x + y) % 2) * 4; 
-
-	bo->pos[index] &= 0b11110000 >> offset;
-	bo->pos[index] |= (pi << offset) & 0b11111111;
+		bo->pos[index] &= 0b11110000 >> offset;
+		bo->pos[index] |= (pi << offset) & 0b11111111;
+	}
 }
 
 void print_board(struct board *bo)
@@ -78,10 +72,8 @@ void print_board(struct board *bo)
 	printf("%s",   (bo->bsc ? "o" : "-"));
 	printf("%s\t", (bo->bbc ? "O" : "-"));
 
-	if (bo->hidden) {
-		printf("hidden:");
-		print_square(0b111111 & bo->hidden);
-	}
+	printf("hidden: ");
+	print_square(bo->hx, bo->hy);
 	printf("\n");
 
 	printf("   a  b  c  d  e  f  g  h\n");
@@ -90,7 +82,7 @@ void print_board(struct board *bo)
 		for (j = 0; j < 8; j++) {
 			if ((i + j) % 2)
 				printf("%s", inv_start);
-			printf(" %c ", to_char(get_piece(bo, square_of(i, j))));
+			printf(" %c ", to_char(get_piece(bo, i, j)));
 			if ((i + j) % 2)
 				printf("%s", inv_stop);
 		}
