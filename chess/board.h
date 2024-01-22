@@ -52,5 +52,6 @@ bool in_bound(int8_t x, int8_t y);
 bool on_bound(int8_t x);
 char to_char(uint8_t pi);
 void print_square(uint8_t x, uint8_t y);
+void print_move(uint16_t mo);
 void print_board(struct board *bo);
 #endif

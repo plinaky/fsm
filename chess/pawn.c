@@ -3,8 +3,10 @@
 #include <stdlib.h>
 #include "board.h"
 
-bool promote(struct board *bo, uint16_t *ml, uint8_t *cnt)
+static void promote(struct board *bo, uint16_t *ml, uint8_t *cnt)
 {
+	(*cnt)--;
+
 	uint16_t mo = ml[(*cnt)];
 
 	ml[(*cnt)++] = (mo | (BQ_ << 12)) & 0xf;
@@ -30,11 +32,10 @@ bool pawn_moves(struct board *bo, uint8_t x, uint8_t y, uint16_t *ml, uint8_t *c
 		dx = -1;
 
 	if (!get_piece(bo, x + dx, y)) {
-		ml[(*cnt)] = MOVE_OF(x, y, x + dx, y, 0, 0);
+		ml[(*cnt)++] = MOVE_OF(x, y, x + dx, y, 0, 0);
 		if (on_bound(x + dx)) {
 			promote(bo, ml, cnt);
-		} else if (on_bound(x - dx) && (!get_piece(bo, x + 2 * dx, dx))) {
-			(*cnt)++;
+		} else if (on_bound(x - dx) && (!get_piece(bo, x + 2 * dx, y))) {
 			ml[(*cnt)++] = MOVE_OF(x, y, x + 2 * dx, y, 0, 0);
 		}
 	}
