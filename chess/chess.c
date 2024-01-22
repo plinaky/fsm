@@ -20,14 +20,14 @@ static uint8_t p1[8][8] = {
 };
 
 static uint8_t p2[8][8] = {
+	{  0,   0,   0,   0,   0, BR_, BK_,   0},
+	{  0,   0,   0,   0, WP_, WP_, WP_, WP_},
 	{  0,   0,   0,   0,   0,   0,   0,   0},
 	{  0,   0,   0,   0,   0,   0,   0,   0},
-	{  0,   0,   0, BK_,   0, WK_,   0,   0},
 	{  0,   0,   0,   0,   0,   0,   0,   0},
 	{  0,   0,   0,   0,   0,   0,   0,   0},
 	{  0,   0,   0,   0,   0,   0,   0,   0},
-	{  0,   0,   0,   0,   0,   0,   0,   0},
-	{  0,   0,   0,   0,   0,   0,   0,   0}
+	{  0,   0,   0,   0, WK_,   0,   0,   0}
 };
 
 int main(void)
@@ -43,17 +43,18 @@ int main(void)
 	b.wbc    = 1;
 	b.bsc    = 1;
 	b.bbc    = 1;
-	b.hx     = 0;
-	b.hy     = 0;
+	b.hx     = 5;
+	b.hy     = 5;
 
 	for (i = 0; i < 8; i++)
 		for (j = 0; j < 8; j++)
-			set_piece(&b, i, j, p1[7 - i][j]);
+			set_piece(&b, i, j, p2[7 - i][j]);
 
 	print_board(&b);
 	for (i = 0; i < 8; i++) {
 		for (j = 0; j < 8; j++) {
-			pawn_moves(&b, i, j, pm, &cnt);
+			if (pawn_moves(&b, i, j, pm, &cnt))
+				printf("check !!!\n");
 			for (k = 0; k < cnt; k++)
 				print_move(pm[k]);
 			if (cnt)
