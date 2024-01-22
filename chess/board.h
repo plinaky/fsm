@@ -7,7 +7,7 @@
 #define	WHITE  (1 << 3)
 
 #define BP_ 1
-#define BN_ 2 
+#define BN_ 2
 #define BB_ 3
 #define BR_ 4
 #define BQ_ 5

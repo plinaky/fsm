@@ -5,10 +5,9 @@
 
 bool king_moves(struct board *bo, uint8_t x, uint8_t y, uint16_t *ml, uint8_t *cnt)
 {
-	int8_t moves[10][2] = {
+	int8_t moves[8][2] = {
 		{ 1,  1}, { 1, -1}, {-1, -1}, {-1,  1},
-		{ 0,  1}, { 0, -1}, { 1,  0}, {-1,  0},
-		{ 0,  2}, { 0, -2},
+		{ 0,  1}, { 0, -1}, { 1,  0}, {-1,  0}
 	};
 	int8_t l, c;
 	uint8_t pi1 = get_piece(bo, x, y);
@@ -24,35 +23,28 @@ bool king_moves(struct board *bo, uint8_t x, uint8_t y, uint16_t *ml, uint8_t *c
 		c = y + moves[i][1];
 		if (in_bound(l, c)) {
 			uint8_t pi2 = get_piece(bo, l, c);
-			if (!(FIG(pi2)) && (l))
-				ml[(*cnt)++] = MOVE_OF(x, y, x + 2 * dx, y, 0, 0);
-				
-		if ((FIG(pi2)) && (COL(pi1) != COL(pi2))) {
+			if (FIG(pi2)) {
+				if (COL(pi1) != COL(pi2)) {
+					if ((l == bo->hx) && (c == bo->hy))
+						return true;
+					ml[(*cnt)++] = MOVE_OF(x, y, l, c, 0, 1);
+				}
+			} else {
+				ml[(*cnt)++] = MOVE_OF(x, y, l, c, 0, 0);
+			}
 		}
 	}
 
-	if (!get_piece(bo, x + dx, y)) {
-		ml[(*cnt)++] = MOVE_OF(x, y, x + dx, y, 0, 0);
-		if (on_bound(x + dx)) {
-			promote(bo, ml, cnt);
-		} else if (on_bound(x - dx) && (!get_piece(bo, x + 2 * dx, y))) {
-			ml[(*cnt)++] = MOVE_OF(x, y, x + 2 * dx, y, 0, 0);
-		}
+	if (((bo->turn) && (bo->wsc)) || (!(bo->turn) && (bo->bsc))) {
+		if ((get_piece(bo, x, y + 1) == 0) && (get_piece(bo, x, y + 2) == 0))
+			ml[(*cnt)++] = MOVE_OF(x, y, x, y + 2, 0, 0);
 	}
 
-	for (dy = -1; dy < 2; dy += 2) {
-		uint8_t pi2 = get_piece(bo, x + dx, y + dy);
-		if ((BK_ == FIG(pi2)) && (COL(pi1) != COL(pi2)))
-			return true;
-		if ((FIG(pi2)) && (COL(pi1) != COL(pi2))) {
-			if (on_bound(x + dx) && (!on_bound(bo->hy)) && (x + dx == bo->hx) && (y + dy == bo->hy))
-				return true;
-			ml[(*cnt)++] = MOVE_OF(x, y, x + dx, y + dy, 0, 1);
-			if (on_bound(x + dx))
-				promote(bo, ml, cnt);
-		}
-		if (!(FIG(pi2)) && (x + dx == bo->hx) && (y + dy == bo->hy))
-			ml[(*cnt)++] = MOVE_OF(x, y, x + dx, y + dy, 0, 1);
+	if (((bo->turn) && (bo->wbc)) || (!(bo->turn) && (bo->bbc))) {
+		if ((get_piece(bo, x, y - 1) == 0) &&
+		    (get_piece(bo, x, y - 2) == 0) &&
+		    (get_piece(bo, x, y - 3) == 0))
+			ml[(*cnt)++] = MOVE_OF(x, y, x, y - 2, 0, 0);
 	}
 
 	return false;

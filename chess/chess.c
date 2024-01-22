@@ -7,6 +7,7 @@
 #include <sys/time.h>
 #include "board.h"
 #include "pawn.h"
+#include "king.h"
 
 static uint8_t p1[8][8] = {
 	{BR_, BN_, BB_, BQ_, BK_, BB_, BN_, BR_},
@@ -22,12 +23,12 @@ static uint8_t p1[8][8] = {
 static uint8_t p2[8][8] = {
 	{  0,   0,   0,   0,   0, BR_, BK_,   0},
 	{  0,   0,   0,   0, WP_,   0, WP_,   0},
-	{  0,   0,   0,   0,   0,   0,   0,   0},
+	{  0,   0,   0,   0, WK_,   0,   0,   0},
 	{  0, BP_, WP_,   0,   0,   0,   0,   0},
 	{  0, WP_,   0,   0,   0,   0,   0,   0},
 	{  0,   0,   0,   0,   0,   0,   0,   0},
 	{WP_,   0,   0,   0,   0,   0,   0,   0},
-	{  0,   0,   0,   0, WK_,   0,   0,   0}
+	{  0,   0,   0,   0,   0,   0,   0,   0}
 };
 
 int main(void)
@@ -39,8 +40,8 @@ int main(void)
 	printf("board %lu \n", sizeof(struct board));
 
 	b.turn   = 1;
-	b.wsc    = 1;
-	b.wbc    = 1;
+	b.wsc    = 0;
+	b.wbc    = 0;
 	b.bsc    = 1;
 	b.bbc    = 1;
 	b.hx     = 5;
@@ -53,7 +54,7 @@ int main(void)
 	print_board(&b);
 	for (i = 0; i < 8; i++) {
 		for (j = 0; j < 8; j++) {
-			if (pawn_moves(&b, i, j, pm, &cnt))
+			if (king_moves(&b, i, j, pm, &cnt))
 				printf("check !!!\n");
 			for (k = 0; k < cnt; k++)
 				print_move(pm[k]);
