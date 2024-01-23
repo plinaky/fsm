@@ -50,9 +50,9 @@ int main(void)
 
 	srand(time(NULL));   // Initialization, should only be called once.
 
-	for (uint8_t i = 0; i < 1; i++) {
+	for (uint8_t i = 0; i < 1000; i++) {
 		memcpy(&b1, &b2, sizeof(struct board));
-		play_game(&b1, 100);
+		play_game(&b1, 250);
 	}
 
 	return 0;

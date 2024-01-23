@@ -9,6 +9,9 @@ bool brq_moves(struct board *bo, uint8_t x, uint8_t y, uint16_t *ml, uint8_t *cn
 	int8_t l, c;
 	uint8_t pi1 = get_piece(bo, x, y);
 	uint8_t start, stop;
+	start = 0;
+	stop  = 0;
+
 
 	if ((COL(pi1) >> 3) != bo->turn)
 		return false;

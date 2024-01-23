@@ -12,11 +12,11 @@ bool list_moves(struct board *bo, uint16_t *ml, uint8_t *cnt)
 		for (int8_t y = 0; y < 8; y++) {
 			if (
 			    (pawn_moves(bo, x, y, ml, cnt))
-			    || (king_moves(bo, x, y, ml, cnt))
-			    || (knight_moves(bo, x, y, ml, cnt))
+			    //|| (king_moves(bo, x, y, ml, cnt))
+			    //|| (knight_moves(bo, x, y, ml, cnt))
 			    || (brq_moves(bo, x, y, ml, cnt))
 			    ) {
-				*cnt = 0;
+//				*cnt = 0;
 				return true;
 			}
 		}
@@ -113,7 +113,6 @@ bool list_legal_moves(struct board *bo, uint16_t *ml, uint8_t *cnt)
 		memcpy(&b, bo, sizeof(struct board));
 		apply_move(&b, ml[i]);
 		if (list_moves(&b, ml2, &cnt2)) {
-			printf("I can eat the king\n");
 			memmove(ml + i, ml + i + 1, sizeof(uint16_t) * ((*cnt) - i - 1));
 			(*cnt)--;
 			i--;
@@ -124,10 +123,16 @@ bool list_legal_moves(struct board *bo, uint16_t *ml, uint8_t *cnt)
 		return false;
 
 	memcpy(&b, bo, sizeof(struct board));
-	b.turn = WHITE - b.turn;
 
-	return list_moves(&b, ml2, &cnt2);
+	bo->turn = (bo->turn ? 0 : 1);
 
+	bool res = list_moves(&b, ml2, &cnt2);
+
+	bo->turn = (bo->turn ? 0 : 1);
+
+	print_moves(ml2, cnt2);
+
+	return res;
 }
 
 
@@ -139,29 +144,30 @@ int8_t play_game(struct board *bo, uint8_t max)
 	bool res;
 
 	for (i = 0; i < max; i++) {
-		print_board(bo);
+		//print_board(bo);
 		res = list_legal_moves(bo, ml, &cnt);
-		print_moves(ml, cnt);
+		//print_moves(ml, cnt);
 		
 		if ((0 == cnt) && (res)) {
+			print_board(bo);
 			printf("\n***** CHECKMATE at move %d! ******\n\n", i);
 			return 1 - bo->turn * 2;
 		}
 
 		if ((0 == cnt) && (!res)) {
+			print_board(bo);
 			printf("\n***** PAT at move %d!       ******\n\n", i);
 			return 0;
 		}
 
 		r = rand() % cnt;
 		apply_move(bo, ml[r]);
-
+/*
 		printf("move %d: ", i);
 		print_move(ml[r]);
 		printf("\n");
+		*/
 	}
-
-	printf("\n***** NO WIN after move %d!      ******\n\n", i);
 
 	return 0;
 }
