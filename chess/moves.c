@@ -93,7 +93,6 @@ bool list_legal_moves(struct board *bo, uint16_t *ml, uint8_t *cnt)
 	for (uint8_t i = 0; i < *cnt; i++) {
 		memcpy(&b, bo, sizeof(struct board));
 		apply_move(&b, ml[i]);
-
 		if (list_moves(&b, ml2, &cnt2)) {
 			memmove(ml + i, ml + i + 1, sizeof(uint16_t) * ((*cnt) - i - 1));
 			(*cnt)--;
@@ -121,6 +120,13 @@ int8_t play_game(struct board *bo, uint8_t max)
 	for (i = 0; i < max; i++) {
 		res = list_legal_moves(bo, ml, &cnt);
 		print_board(bo);
+		printf("move %d: ", i);
+		print_move(ml[i]);
+		printf("\n");
+
+		for (uint8_t j = 0; j < cnt; j++)
+			print_move(ml[j]);
+		printf("\n");
 
 		if ((0 == cnt) && (res)) {
 			printf("\n***** CHECKMATE at move %d! ******\n\n", i);
