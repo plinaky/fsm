@@ -55,5 +55,5 @@ void print_square(uint8_t x, uint8_t y);
 void print_move(uint16_t mo);
 void print_moves(uint16_t *ml, uint8_t cnt);
 void print_board(struct board *bo);
-int8_t play_game(struct board *bo, uint8_t max);
+int8_t play_game(struct board *bo, uint16_t max);
 #endif

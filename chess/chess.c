@@ -20,14 +20,14 @@ static uint8_t p1[8][8] = {
 };
 
 static uint8_t p2[8][8] = {
-	{  0,   0,   0,   0,   0, BR_, BK_,   0},
-	{  0,   0,   0,   0, WP_,   0, WP_,   0},
-	{  0,   0,   0,   0, WK_,   0,   0,   0},
-	{  0, BP_, WP_,   0,   0,   0,   0,   0},
-	{  0, WP_,   0,   0,   0,   0,   0,   0},
+	{BR_,   0,   0,   0, BK_,   0,   0, BR_},
 	{  0,   0,   0,   0,   0,   0,   0,   0},
-	{WP_,   0,   0,   0,   0,   0,   0,   0},
-	{  0,   0,   0,   0,   0,   0,   0,   0}
+	{  0,   0,   0,   0,   0,   0,   0,   0},
+	{  0,   0,   0,   0,   0,   0,   0,   0},
+	{  0,   0,   0,   0,   0,   0,   0,   0},
+	{  0,   0,   0,   0,   0,   0,   0,   0},
+	{  0,   0,   0,   0,   0,   0,   0,   0},
+	{WR_,   0,   0,   0, WK_,   0,   0, WR_}
 };
 
 int main(void)
@@ -50,9 +50,9 @@ int main(void)
 
 	srand(time(NULL));   // Initialization, should only be called once.
 
-	for (uint8_t i = 0; i < 1000; i++) {
+	for (uint8_t i = 0; i < 100000; i++) {
 		memcpy(&b1, &b2, sizeof(struct board));
-		play_game(&b1, 250);
+		play_game(&b1, 400);
 	}
 
 	return 0;

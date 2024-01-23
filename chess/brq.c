@@ -22,7 +22,7 @@ bool brq_moves(struct board *bo, uint8_t x, uint8_t y, uint16_t *ml, uint8_t *cn
 	} else if (BB_ == FIG(pi1)) {
 		start = 2;
 		stop  = 4;
-	} if (BQ_ == FIG(pi1)) {
+	} else if (BQ_ == FIG(pi1)) {
 		start = 0;
 		stop  = 4;
 	} else {
