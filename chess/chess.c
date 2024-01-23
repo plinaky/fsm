@@ -48,13 +48,11 @@ int main(void)
 		for (uint8_t j = 0; j < 8; j++)
 			set_piece(&b2, i, j, p1[7 - i][j]);
 
-	print_board(&b1);
-
 	srand(time(NULL));   // Initialization, should only be called once.
 
 	for (uint8_t i = 0; i < 1; i++) {
 		memcpy(&b1, &b2, sizeof(struct board));
-		play_game(&b1, 5);
+		play_game(&b1, 100);
 	}
 
 	return 0;

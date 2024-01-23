@@ -35,9 +35,11 @@ bool brq_moves(struct board *bo, uint8_t x, uint8_t y, uint16_t *ml, uint8_t *cn
 					uint8_t pi2 = get_piece(bo, l, c);
 					if (FIG(pi2)) {
 						if (COL(pi1) != COL(pi2)) {
-							if ((l == bo->hx) && (c == bo->hy))
+							if (((l == bo->hx) && (c == bo->hy))
+							    || (BK_ == FIG(pi2)))
 								return true;
 							ml[(*cnt)++] = MOVE_OF(x, y, l, c, 0, 1);
+							break;
 						} else {
 							break;
 						}

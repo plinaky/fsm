@@ -47,7 +47,7 @@ uint8_t get_piece(struct board *bo, int8_t x, int8_t y)
 {
 	if (in_bound(x, y)) {
 		uint8_t index  =  (8 * x + y) / 2;
-		uint8_t offset = ((8 * x + y) % 2) << 2; 
+		uint8_t offset = ((8 * x + y) % 2) << 2;
 
 		return (bo->pos[index] >> offset) & 0b1111;
 	}
@@ -57,6 +57,8 @@ uint8_t get_piece(struct board *bo, int8_t x, int8_t y)
 
 void set_piece(struct board *bo, int8_t x, int8_t y, uint8_t pi)
 {
+	pi &= 0b1111;
+
 	if (in_bound(x, y)) {
 		uint8_t index  =  (8 * x + y) / 2;
 		uint8_t offset = ((8 * x + y) % 2) * 4; 
@@ -73,7 +75,7 @@ void print_board(struct board *bo)
 	char inv_start[] = "\x1b[7m";
 	char inv_stop[]  = "\x1b[0m";
 
-	printf("%s to play\t", (bo->turn ? "BLACK" : "WHITE"));
+	printf("\n%s to play\t", (bo->turn ? "WHITE" : "BLACK"));
 	printf("W/B cr: ");
 	printf("%s",   (bo->wsc ? "o" : "-"));
 	printf("%s/",  (bo->wbc ? "O" : "-"));
