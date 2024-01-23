@@ -2,7 +2,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include "board.h"
-#include "pawn.h"
 
 bool in_bound(int8_t x, int8_t y)
 {

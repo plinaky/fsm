@@ -2,7 +2,15 @@ cmake_minimum_required(VERSION 3.5)
 
 project(chess)
 
-add_executable(chess chess.c board.c pawn.c king.c)
+add_executable(chess
+	chess.c
+	board.c
+	pawn.c
+	king.c
+	knight.c
+	brq.c
+	moves.c
+	)
 
 #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -Os")
 #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -S")

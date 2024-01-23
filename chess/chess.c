@@ -6,8 +6,7 @@
 #include <stdlib.h>
 #include <sys/time.h>
 #include "board.h"
-#include "pawn.h"
-#include "king.h"
+#include "pieces.h"
 
 static uint8_t p1[8][8] = {
 	{BR_, BN_, BB_, BQ_, BK_, BB_, BN_, BR_},
@@ -33,35 +32,29 @@ static uint8_t p2[8][8] = {
 
 int main(void)
 {
-	struct board b;
-	uint16_t pm[50];
-	uint8_t i, j, k, cnt;
+	struct board b1, b2;
 
 	printf("board %lu \n", sizeof(struct board));
 
-	b.turn   = 1;
-	b.wsc    = 0;
-	b.wbc    = 0;
-	b.bsc    = 1;
-	b.bbc    = 1;
-	b.hx     = 5;
-	b.hy     = 1;
+	b2.turn   = 1;
+	b2.wsc    = 1;
+	b2.wbc    = 1;
+	b2.bsc    = 1;
+	b2.bbc    = 1;
+	b2.hx     = 0;
+	b2.hy     = 0;
 
-	for (i = 0; i < 8; i++)
-		for (j = 0; j < 8; j++)
-			set_piece(&b, i, j, p2[7 - i][j]);
+	for (uint8_t i = 0; i < 8; i++)
+		for (uint8_t j = 0; j < 8; j++)
+			set_piece(&b2, i, j, p1[7 - i][j]);
 
-	print_board(&b);
-	for (i = 0; i < 8; i++) {
-		for (j = 0; j < 8; j++) {
-			if (king_moves(&b, i, j, pm, &cnt))
-				printf("check !!!\n");
-			for (k = 0; k < cnt; k++)
-				print_move(pm[k]);
-			if (cnt)
-				printf("\n");
-			cnt = 0;
-		}
+	print_board(&b1);
+
+	srand(time(NULL));   // Initialization, should only be called once.
+
+	for (uint8_t i = 0; i < 1; i++) {
+		memcpy(&b1, &b2, sizeof(struct board));
+		play_game(&b1, 5);
 	}
 
 	return 0;

@@ -54,4 +54,5 @@ char to_char(uint8_t pi);
 void print_square(uint8_t x, uint8_t y);
 void print_move(uint16_t mo);
 void print_board(struct board *bo);
+int8_t play_game(struct board *bo, uint8_t max);
 #endif
