@@ -168,7 +168,7 @@ int8_t play_game(struct board *bo, uint16_t max)
 			print_board(bo);
 			printf("\n***** CHECKMATE at move %d! ******\n\n", i);
 #endif
-			return 1 - bo->turn * 2;
+			return 1 - ((int)(bo->turn)) * 2;
 		}
 
 		if ((0 == cnt) && (!res)) {

@@ -52,7 +52,7 @@ int main(void)
 
 	for (uint8_t i = 0; i < 100000; i++) {
 		memcpy(&b1, &b2, sizeof(struct board));
-		play_game(&b1, 400);
+		play_game(&b1, 1000);
 	}
 
 	return 0;
