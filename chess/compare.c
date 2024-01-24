@@ -10,24 +10,29 @@ bool compare(struct board *b1, struct board *b2)
 
 void flip(struct board *b)
 {
-	uint8_t i, j;
-	struct board tb;
+	uint8_t i, j, wsc, wbc, bsc, bbc;
 
 	print_board(b);
-	memcpy(&tb, b, sizeof(struct board));
 
-	for (uint8_t i = 0; i < 8; i++) {
-		for (uint8_t j = 0; j < 8; j++) {
-			uint8_t p = get_piece(&tb, i, j);
-			set_piece(b, 7 - i, j, (p ? p ^ 0x8 : 0));  
+	for (i = 0; i < 4; i++) {
+		for (j = 0; j < 8; j++) {
+			wsc = (get_piece(b, i, j) ? get_piece(b, i, j) ^ 0x8 : 0);
+			set_piece(b, i, j, (get_piece(b, 7 - i, j) ? get_piece(b, 7 - i, j) ^ 0x8 : 0));
+			set_piece(b, 7 - i, j, wsc);
 		}
 	}
 
 	b->turn = (b->turn ? 0 : 1);
-	b->wsc = tb.bsc;
-	b->wbc = tb.bbc;
-	b->bsc = tb.wsc;
-	b->bbc = tb.wbc;
+
+	wsc = b->bsc;
+	wbc = b->bbc;
+	bsc = b->wsc;
+	bbc = b->wbc;
+
+	b->wsc = bsc;
+	b->wbc = bbc;
+	b->bsc = wsc;
+	b->bbc = wbc;
 
 	if ((b->hx != 0) && (b->hy != 0))
 		b->hx = 7 - b->hx;
