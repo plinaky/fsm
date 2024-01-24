@@ -6,7 +6,6 @@
 #include <stdlib.h>
 #include <sys/time.h>
 #include "board.h"
-#include "pieces.h"
 
 static uint8_t p1[8][8] = {
 	{BR_, BN_, BB_, BQ_, BK_, BB_, BN_, BR_},
@@ -50,9 +49,9 @@ int main(void)
 
 	srand(time(NULL));   // Initialization, should only be called once.
 
-	for (uint8_t i = 0; i < 100000; i++) {
+	for (uint8_t i = 0; i < 10; i++) {
 		memcpy(&b1, &b2, sizeof(struct board));
-		play_game(&b1, 1000);
+		play(&b1, 1000);
 	}
 
 	return 0;

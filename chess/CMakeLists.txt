@@ -9,8 +9,9 @@ add_executable(chess
 	king.c
 	knight.c
 	brq.c
-	moves.c
+	move.c
 	compare.c
+	game.c
 	)
 
 #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -Os")

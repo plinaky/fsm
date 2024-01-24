@@ -2,13 +2,37 @@
 #include <string.h>
 #include <stdlib.h>
 #include "board.h"
-#include "pieces.h"
+#include "move.h"
 #include "compare.h"
 
-//#define DEBUG_MOVES
-#define DEBUG_MAT
-//#define DEBUG_PAT
-//#define DEBUG_DRAW
+void print_move(uint16_t mo)
+{
+	print_square(X1_OF(mo), Y1_OF(mo));
+	printf("%c", (TAKOF(mo) ? 'x' : '-'));
+	print_square(X2_OF(mo), Y2_OF(mo));
+	printf("%c ", (PROMO(mo) ? to_char(PROMO(mo) | WHITE) : ' '));
+}
+
+void print_moves(uint16_t *ml, uint8_t cnt)
+{
+	uint8_t x = 0;
+	uint8_t y = 0;
+
+	x = X1_OF(ml[0]);
+	y = Y1_OF(ml[0]);
+
+	for (uint8_t i = 0; i < cnt; i++) {
+ /*		if ((x != X1_OF(ml[i])) || (y != Y1_OF(ml[i]))) {
+			x = X1_OF(ml[i]);
+			y = Y1_OF(ml[i]);
+			printf("\n");
+		} */
+		if (! (i % 8))
+			printf("\n%3d: ", i);
+		print_move(ml[i]);
+	}
+	printf("\n");
+}
 
 bool list_moves(struct board *bo, uint16_t *ml, uint8_t *cnt)
 {
@@ -29,25 +53,6 @@ bool list_moves(struct board *bo, uint16_t *ml, uint8_t *cnt)
 	return false;
 }
 
-void print_moves(uint16_t *ml, uint8_t cnt)
-{
-	uint8_t x = 0;
-	uint8_t y = 0;
-
-	x = X1_OF(ml[0]);
-	y = Y1_OF(ml[0]);
-
-	for (uint8_t i = 0; i < cnt; i++) {
-		if ((x != X1_OF(ml[i])) || (y != Y1_OF(ml[i]))) {
-			x = X1_OF(ml[i]);
-			y = Y1_OF(ml[i]);
-			printf("\n");
-		}
-		print_move(ml[i]);
-	}
-	printf("\n");
-}
-
 void apply_move(struct board *bo, uint16_t mo)
 {
 	int8_t x1 = X1_OF(mo);
@@ -59,6 +64,8 @@ void apply_move(struct board *bo, uint16_t mo)
 
 	bo->hx = 0;
 	bo->hy = 0;
+
+	set_piece(bo, x1, y1, 0);
 
 	/* rook case to clear castling rights */
 	if (WR_ == pi1) {
@@ -112,7 +119,6 @@ void apply_move(struct board *bo, uint16_t mo)
 		}
 	}
 
-	set_piece(bo, x1, y1, 0);
 	set_piece(bo, x2, y2, pi1);
 
 
@@ -128,7 +134,7 @@ bool list_legal_moves(struct board *bo, uint16_t *ml, uint8_t *cnt)
 	if (list_moves(bo, ml, cnt))
 		return true;
 
-	for (uint8_t i = 0; i < *cnt; i++) {
+	for (int16_t i = 0; i < *cnt; i++) {
 		memcpy(&b, bo, sizeof(struct board));
 		apply_move(&b, ml[i]);
 		if (list_moves(&b, ml2, &cnt2)) {
@@ -146,55 +152,4 @@ bool list_legal_moves(struct board *bo, uint16_t *ml, uint8_t *cnt)
 	b.turn = (b.turn ? 0 : 1);
 
 	return list_moves(&b, ml2, &cnt2);
-}
-
-
-int8_t play_game(struct board *bo, uint16_t max)
-{
-	int r;
-	uint8_t cnt;
-	uint16_t i;
-	uint16_t ml[200];
-	bool res;
-
-	for (i = 0; i < max; i++) {
-		res = list_legal_moves(bo, ml, &cnt);
-#ifdef DEBUG_MOVES
-		print_board(bo);
-		print_moves(ml, cnt);
-#endif
-		
-		if ((0 == cnt) && (res)) {
-#ifdef DEBUG_MAT
-			//print_board(bo);
-			printf("\n***** CHECKMATE at move %d! ******\n\n", i);
-			flip(bo);
-#endif
-			return 1 - ((int)(bo->turn)) * 2;
-		}
-
-		if ((0 == cnt) && (!res)) {
-#ifdef DEBUG_PAT
-			print_board(bo);
-			printf("\n***** PAT at move %d!       ******\n\n", i);
-#endif
-			return 0;
-		}
-
-		r = rand() % cnt;
-
-#ifdef DEBUG_MOVES
-		printf("move %d: ", i);
-		print_move(ml[r]);
-		printf("\n");
-#endif
-		apply_move(bo, ml[r]);
-	}
-
-#ifdef DEBUG_DRAW
-			print_board(bo);
-			printf("\n***** DRAW at move %d!       ******\n\n", i);
-#endif
-
-	return 0;
 }

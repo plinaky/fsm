@@ -35,14 +35,6 @@ void print_square(uint8_t x, uint8_t y)
 	printf("%c%d", (char)y + 'a', x + 1);
 }
 
-void print_move(uint16_t mo)
-{
-	print_square(X1_OF(mo), Y1_OF(mo));
-	printf("%c", (TAKOF(mo) ? 'x' : '-'));
-	print_square(X2_OF(mo), Y2_OF(mo));
-	printf("%c ", (PROMO(mo) ? to_char(PROMO(mo) | WHITE) : ' '));
-}
-
 uint8_t get_piece(struct board *bo, int8_t x, int8_t y)
 {
 	if (in_bound(x, y)) {
