@@ -3,11 +3,12 @@
 #include <stdlib.h>
 #include "board.h"
 #include "pieces.h"
+#include "compare.h"
 
 //#define DEBUG_MOVES
-//#define DEBUG_MAT
+#define DEBUG_MAT
 //#define DEBUG_PAT
-#define DEBUG_DRAW
+//#define DEBUG_DRAW
 
 bool list_moves(struct board *bo, uint16_t *ml, uint8_t *cnt)
 {
@@ -165,8 +166,9 @@ int8_t play_game(struct board *bo, uint16_t max)
 		
 		if ((0 == cnt) && (res)) {
 #ifdef DEBUG_MAT
-			print_board(bo);
+			//print_board(bo);
 			printf("\n***** CHECKMATE at move %d! ******\n\n", i);
+			flip(bo);
 #endif
 			return 1 - ((int)(bo->turn)) * 2;
 		}

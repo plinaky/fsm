@@ -10,6 +10,7 @@ add_executable(chess
 	knight.c
 	brq.c
 	moves.c
+	compare.c
 	)
 
 #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -Os")
