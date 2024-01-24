@@ -147,9 +147,7 @@ bool list_legal_moves(struct board *bo, uint16_t *ml, uint8_t *cnt)
 	if (*cnt)
 		return false;
 
-	memcpy(&b, bo, sizeof(struct board));
+	bo->turn = (bo->turn ? 0 : 1);
 
-	b.turn = (b.turn ? 0 : 1);
-
-	return list_moves(&b, ml2, &cnt2);
+	return list_moves(bo, ml2, &cnt2);
 }

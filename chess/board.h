@@ -53,6 +53,5 @@ bool on_bound(int8_t x);
 char to_char(uint8_t pi);
 void print_square(uint8_t x, uint8_t y);
 void print_board(struct board *bo);
-int8_t play(struct board *bo, uint16_t max);
-void replay(struct board *bo, uint16_t *ml, uint16_t cnt);
+uint16_t play(struct board *bo, uint16_t max);
 #endif

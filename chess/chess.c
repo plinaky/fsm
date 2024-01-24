@@ -18,20 +18,10 @@ static uint8_t p1[8][8] = {
 	{WR_, WN_, WB_, WQ_, WK_, WB_, WN_, WR_}
 };
 
-static uint8_t p2[8][8] = {
-	{BR_,   0,   0,   0, BK_,   0,   0, BR_},
-	{  0,   0,   0,   0,   0,   0,   0,   0},
-	{  0,   0,   0,   0,   0,   0,   0,   0},
-	{  0,   0,   0,   0,   0,   0,   0,   0},
-	{  0,   0,   0,   0,   0,   0,   0,   0},
-	{  0,   0,   0,   0,   0,   0,   0,   0},
-	{  0,   0,   0,   0,   0,   0,   0,   0},
-	{WR_,   0,   0,   0, WK_,   0,   0, WR_}
-};
-
 int main(void)
 {
 	struct board b1, b2;
+	uint64_t moves = 0;
 
 	printf("board %lu \n", sizeof(struct board));
 
@@ -49,9 +39,9 @@ int main(void)
 
 	srand(time(NULL));   // Initialization, should only be called once.
 
-	for (uint8_t i = 0; i < 10; i++) {
+	for (uint32_t i = 0; i < 10000000; i++) {
 		memcpy(&b1, &b2, sizeof(struct board));
-		play(&b1, 1000);
+		moves += play(&b1, 1000);
 	}
 
 	return 0;
