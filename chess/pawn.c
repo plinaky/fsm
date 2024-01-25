@@ -1,6 +1,3 @@
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
 #include "board.h"
 
 static void promote(struct board *bo, uint16_t *ml, uint8_t *cnt)

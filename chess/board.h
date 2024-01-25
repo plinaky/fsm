@@ -1,8 +1,7 @@
 #ifndef BOARD_H
 #define BOARD_H
 
-#include <stdbool.h>
-#include <stdint.h>
+#include "standards.h"
 
 #define	WHITE  (1 << 3)
 

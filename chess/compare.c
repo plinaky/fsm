@@ -1,6 +1,3 @@
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
 #include "board.h"
 
 #define _00_(_I_, _J_)  (_I_      ), (_J_      )
@@ -10,11 +7,6 @@
 
 #define _VV_(_I_, _J_)  (7 - (_I_)), (_J_      )
 #define _HH_(_I_, _J_)  (_I_      ), (7 - (_J_))
-
-bool compare(struct board *b1, struct board *b2)
-{
-	return memcmp(b1, b2, sizeof(struct board)) == 0;
-}
 
 void flip(struct board *b)
 {
@@ -107,3 +99,10 @@ bool rotate(struct board *b, bool clock)
 	return true;
 
 }
+
+int compare(struct board *b1, struct board *b2)
+{
+	return memcmp(b1, b2, sizeof(struct board)) == 0;
+}
+
+

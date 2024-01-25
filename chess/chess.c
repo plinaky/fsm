@@ -1,10 +1,3 @@
-#include <stdio.h>
-#include <stdint.h>
-#include <stdbool.h>
-#include <string.h>
-#include <time.h>
-#include <stdlib.h>
-#include <sys/time.h>
 #include "board.h"
 
 static uint8_t p1[8][8] = {
