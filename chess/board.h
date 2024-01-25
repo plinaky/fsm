@@ -22,6 +22,7 @@
 
 #define FIG(_PI_) ((uint8_t)((_PI_) & 0b111))
 #define COL(_PI_) ((uint8_t)((_PI_) & (WHITE)))
+#define OP_COL(_PI_) ((uint8_t)(((_PI_) ? (_PI_) ^ 0x8 : 0) & 0b1111))
 
 #define MOVE_OF(_X1_, _Y1_, _X2_, _Y2_, _PRO_, _TAK_) ((uint16_t)   \
 	 ((((_X1_)   & 0b111) <<  0) | (((_Y1_)   & 0b111) <<  3) | \
