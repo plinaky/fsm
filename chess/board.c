@@ -60,13 +60,8 @@ void set_piece(struct board *bo, int8_t x, int8_t y, uint8_t pi)
 	}
 }
 
-void print_board(struct board *bo)
+static inline void print_game_status(struct board *bo)
 {
-	uint8_t i, j;
-
-	char inv_start[] = "\x1b[7m";
-	char inv_stop[]  = "\x1b[0m";
-
 	printf("\n%s to play\t", (bo->turn ? "WHITE" : "BLACK"));
 	printf("W/B cr: ");
 	printf("%s",   (bo->wsc ? "o" : "-"));
@@ -77,6 +72,16 @@ void print_board(struct board *bo)
 	printf("hidden: ");
 	print_square(bo->hx, bo->hy);
 	printf("\n");
+}
+
+void print_board(struct board *bo)
+{
+	uint8_t i, j;
+
+	char inv_start[] = "\x1b[7m";
+	char inv_stop[]  = "\x1b[0m";
+
+	print_game_status(bo);
 
 	printf("   a  b  c  d  e  f  g  h\n");
 	for (i = 7; i < 8; i--) {

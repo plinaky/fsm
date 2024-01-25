@@ -21,6 +21,10 @@ uint16_t play(struct board *bo, uint16_t max)
 		apply_move(bo, ml[r]);
 		game[i] = ml[r];
 	}
-
+	print_board(bo);
+	flip(bo);
+	mirror(bo);
+	rotate(bo, true);
+	rotate(bo, false);
 	return i;
 }
