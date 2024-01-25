@@ -100,9 +100,11 @@ bool rotate(struct board *b, bool clock)
 
 }
 
-int compare(struct board *b1, struct board *b2)
+uint32_t compare(struct board *b1, struct board *b2)
 {
-	return memcmp(b1, b2, sizeof(struct board)) == 0;
+	if (memcmp(b1, b2, sizeof(struct board)) == 0)
+		return UINT32_MAX;
+	else return 0;
 }
 
 
