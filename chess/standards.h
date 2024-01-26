@@ -30,5 +30,6 @@
 #include <stdbool.h> /* Types booléens */
 
 #include <sys/time.h> /* Accçs aux primitives de temps système */
+#include <sys/resource.h> /* pour changer la stack size */
 
 #endif

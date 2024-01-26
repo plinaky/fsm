@@ -32,9 +32,9 @@ int main(void)
 
 	srand(time(NULL));   // Initialization, should only be called once.
 
-	for (uint32_t i = 0; i < 10; i++) {
+	for (uint32_t i = 0; i < 1000000; i++) {
 		memcpy(&b1, &b2, sizeof(struct board));
-		moves += play(&b1, 200);
+		moves += play(&b1, 140);
 	}
 
 	return 0;

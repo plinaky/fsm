@@ -18,5 +18,10 @@ uint16_t play(struct board *bo, uint16_t max)
 		apply_move(bo, ml[r]);
 		game[i] = ml[r];
 	}
+
+	bo->turn = (bo->turn ? 0 : 1);
+	if (!res && !cnt)
+		print_pos(bo);
+
 	return i;
 }

@@ -10,6 +10,52 @@ bool on_bound(int8_t x)
 	return (0 == x) || (x == 7);
 }
 
+void print_fig(struct board *bo, uint8_t i, uint8_t j)
+{
+	uint8_t pi = get_piece(bo, i, j);
+	const char *fig[12] = {
+		"\u2659\0",
+		"\u2658\0",
+		"\u2657\0",
+		"\u2656\0",
+		"\u2655\0",
+		"\u2654\0",
+
+		"\u265F\0",
+		"\u265E\0",
+		"\u265D\0",
+		"\u265C\0",
+		"\u265B\0",
+		"\u265A\0",
+	};
+
+	char inv_start[] = "\x1b[7m";
+	char inv_stop[]  = "\x1b[0m";
+
+	if ((i + j) % 2)
+		printf("%s", inv_start);
+
+	if (FIG(pi)) {
+		if COL(pi) {
+			if ((i + j) % 2)
+				printf(" %s ", fig[FIG(pi) - 1]);
+			else
+				printf(" %s ", fig[FIG(pi) + 5]);
+		} else {
+			if ((i + j) % 2)
+				printf(" %s ", fig[FIG(pi) + 5]);
+			else
+				printf(" %s ", fig[FIG(pi) - 1]);
+		}
+	} else {
+		printf("   ");
+	}
+
+	if ((i + j) % 2)
+		printf("%s", inv_stop);
+
+}
+
 char to_char(uint8_t pi)
 {
 	char c = ' ';
@@ -71,6 +117,25 @@ static inline void print_game_status(struct board *bo)
 	printf("\n");
 }
 
+void print_pos(struct board *bo)
+{
+	uint8_t i, j;
+
+	printf("\n");
+	print_game_status(bo);
+	printf("\n");
+	printf("\t   A  B  C  D  E  F  G  H\n");
+	for (i = 7; i < 8; i--) {
+		printf("\t%d ", i + 1);
+		for (j = 0; j < 8; j++) {
+			print_fig(bo, i, j);
+		}
+		printf(" %d", i + 1);
+		printf("\n");
+	}
+	printf("\t   A  B  C  D  E  F  G  H\n");
+}
+
 void print_board(struct board *bo)
 {
 	uint8_t i, j;
@@ -80,7 +145,7 @@ void print_board(struct board *bo)
 
 	print_game_status(bo);
 
-	printf("   a  b  c  d  e  f  g  h\n");
+	printf("   A  B  C  D  E  F  G  h\n");
 	for (i = 7; i < 8; i--) {
 		printf("%d ", i + 1);
 		for (j = 0; j < 8; j++) {

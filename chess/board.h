@@ -5,12 +5,12 @@
 
 #define	WHITE  (1 << 3)
 
-#define BP_ 1
-#define BN_ 2
-#define BB_ 3
-#define BR_ 4
-#define BQ_ 5
 #define BK_ 6
+#define BQ_ 5
+#define BR_ 4
+#define BB_ 3
+#define BN_ 2
+#define BP_ 1
 
 #define WP_ (WHITE | BP_)
 #define WN_ (WHITE | BN_)
@@ -53,5 +53,6 @@ bool on_bound(int8_t x);
 char to_char(uint8_t pi);
 void print_square(uint8_t x, uint8_t y);
 void print_board(struct board *bo);
+void print_pos(struct board *bo);
 uint16_t play(struct board *bo, uint16_t max);
 #endif
