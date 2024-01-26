@@ -102,9 +102,25 @@ bool rotate(struct board *b, bool clock)
 
 uint32_t compare(struct board *b1, struct board *b2)
 {
-	if (memcmp(b1, b2, sizeof(struct board)) == 0)
-		return UINT32_MAX;
-	else return 0;
+	uint64_t b[4];
+	int8_t i, j;
+	uint32_t sum = 0;
+
+//	if (memcmp(b1, b2, sizeof(struct board)) == 0)
+//		return UINT32_MAX;
+
+	for (i = 0; i < 4; i++)
+		b[i] = *((uint64_t *)(b1->pos) + i) ^ (*(((uint64_t *)(b2->pos)) + i));
+
+
+	for (i = 0; i < 4; i++) {
+		for (j = 0; j < 64; j++) {
+			sum += b[i] & 1;
+			b[i] >>= 1;
+		}
+	}
+
+	return sum;
 }
 
 

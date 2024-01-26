@@ -14,7 +14,7 @@ add_executable(chess
 	game.c
 	)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -Os")
+#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -Os")
 #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -S")
-set(CMAKE_BUILD_TYPE Release)
-#set(CMAKE_BUILD_TYPE Debug)
+#set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_BUILD_TYPE Debug)
