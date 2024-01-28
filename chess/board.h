@@ -36,14 +36,15 @@
 #define TAKOF(_MO_) ((uint8_t)(((_MO_) >> 15) &  0b1  ))
 
 struct board {
-	uint8_t   pos[32];
-	uint16_t  turn   : 1;
-	uint16_t  wsc    : 1;
-	uint16_t  wbc    : 1;
-	uint16_t  bsc    : 1;
-	uint16_t  bbc    : 1;
-	uint16_t  hx     : 3;
-	uint16_t  hy     : 3;
+	uint8_t  pos[32];
+	uint16_t turn   : 1;
+	uint16_t wsc    : 1;
+	uint16_t wbc    : 1;
+	uint16_t bsc    : 1;
+	uint16_t bbc    : 1;
+	uint16_t hx     : 3;
+	uint16_t hy     : 3;
+	uint16_t unused : 5;
 };
 
 extern uint8_t pref[8][8];

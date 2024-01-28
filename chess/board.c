@@ -186,4 +186,5 @@ void init_board(struct board *bo, uint8_t po[8][8])
 	bo->bbc    = 1;
 	bo->hx     = 0;
 	bo->hy     = 0;
+	bo->unused = 0;
 }
