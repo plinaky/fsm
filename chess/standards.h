@@ -29,7 +29,16 @@
 #include <stdint.h>  /* Types entiers de taille fixe */
 #include <stdbool.h> /* Types booléens */
 
+
+
+/* additions*/
 #include <sys/time.h> /* Accçs aux primitives de temps système */
 #include <sys/resource.h> /* pour changer la stack size */
+
+/* memory mapping */
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <unistd.h>
+#include <sys/stat.h>
 
 #endif

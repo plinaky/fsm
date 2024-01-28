@@ -46,9 +46,12 @@ struct node {
 	uint32_t views;
 	uint32_t cost;
 	uint32_t win;
-	struct node *d, *u, *l, *r;
-
+	struct node *u, *d, *l, *r;
 	struct board b;
 	uint16_t move;
 };
+
+void create_root(struct node *map, uint32_t size);
+uint32_t store_pos(struct node *map, struct board *b, uint16_t move);
+
 #endif

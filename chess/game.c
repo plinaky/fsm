@@ -1,32 +1,31 @@
 #include "board.h"
 #include "move.h"
 #include "compare.h"
+#include "mapper.h"
+#include "tree.h"
 
 uint16_t play(struct board *bo, uint16_t max)
 {
-	uint16_t ml[200];
-	int r;
-	uint16_t i, game[max];
-	uint8_t cnt;
-	bool res;
-	struct board b;
-
-	memcpy(&b, bo, sizeof(struct board));
+	uint16_t i, j, ml[255];
+	uint32_t r;
+	uint8_t cnt = 1;
+	struct node *map = create_map(max);
 
 	for (i = 0; i < max; i++) {
-		res = list_legal_moves(bo, ml, &cnt);
-		if (res || !cnt)
+		if (list_legal_moves(bo, ml, &cnt) || !cnt)
 			break;
 		r = rand() % cnt;
 		apply_move(bo, ml[r]);
-		game[i] = ml[r];
-		printf("%d ", compare(bo, &b));
+		store_pos(map, bo, ml[r]);
 	}
-	printf("\n\n");
 
-	bo->turn = (bo->turn ? 0 : 1);
-	if (!res && !cnt)
-		print_pos(bo);
+	flush_map("game0.txt", map, max);
+	map = open_map("game0.txt", max);
 
+	for (i = 0; i < ((uint32_t)(map[0].r)); i++) {
+		printf("Move %d : ", i);
+		print_move(map[i].move);
+		print_pos(&map[i].b);
+	}
 	return i;
 }

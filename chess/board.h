@@ -46,6 +46,8 @@ struct board {
 	uint16_t  hy     : 3;
 };
 
+extern uint8_t pref[8][8];
+
 uint8_t get_piece(struct board *bo, int8_t x, int8_t y);
 void set_piece(struct board *bo, int8_t x, int8_t y, uint8_t pi);
 bool in_bound(int8_t x, int8_t y);
@@ -54,5 +56,6 @@ char to_char(uint8_t pi);
 void print_square(uint8_t x, uint8_t y);
 void print_board(struct board *bo);
 void print_pos(struct board *bo);
-uint16_t play(struct board *bo, uint16_t max);
+void init_board(struct board *bo, uint8_t po[8][8]);
+
 #endif

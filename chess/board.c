@@ -1,5 +1,17 @@
 #include "board.h"
 
+uint8_t pref[8][8] = {
+	{BR_, BN_, BB_, BQ_, BK_, BB_, BN_, BR_},
+	{BP_, BP_, BP_, BP_, BP_, BP_, BP_, BP_},
+	{  0,   0,   0,   0,   0,   0,   0,   0},
+	{  0,   0,   0,   0,   0,   0,   0,   0},
+	{  0,   0,   0,   0,   0,   0,   0,   0},
+	{  0,   0,   0,   0,   0,   0,   0,   0},
+	{WP_, WP_, WP_, WP_, WP_, WP_, WP_, WP_},
+	{WR_, WN_, WB_, WQ_, WK_, WB_, WN_, WR_}
+};
+
+
 bool in_bound(int8_t x, int8_t y)
 {
 	return (0 <= x) && (x < 8) && (0 <= y) && (y < 8);
@@ -157,4 +169,21 @@ void print_board(struct board *bo)
 		}
 		printf("\n");
 	}
+}
+
+void init_board(struct board *bo, uint8_t po[8][8])
+{
+	for (uint8_t i = 0; i < 8; i++) {
+		for (uint8_t j = 0; j < 8; j++) {
+			set_piece(bo, i, j, po[7 - i][j]);
+		}
+	}
+
+	bo->turn   = 1;
+	bo->wsc    = 1;
+	bo->wbc    = 1;
+	bo->bsc    = 1;
+	bo->bbc    = 1;
+	bo->hx     = 0;
+	bo->hy     = 0;
 }

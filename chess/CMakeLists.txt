@@ -12,6 +12,8 @@ add_executable(chess
 	move.c
 	compare.c
 	game.c
+	tree.c
+	mapper.c
 	)
 
 #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -Os")
