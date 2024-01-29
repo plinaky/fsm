@@ -1,8 +1,10 @@
+#include "standards.h"
 #include "board.h"
 #include "move.h"
 #include "compare.h"
 #include "mapper.h"
 #include "tree.h"
+
 
 int8_t play(struct board *bo)
 {

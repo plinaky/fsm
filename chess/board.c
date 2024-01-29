@@ -1,3 +1,4 @@
+#include "standards.h"
 #include "board.h"
 
 uint8_t pref[8][8] = {

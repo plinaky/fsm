@@ -17,7 +17,7 @@ add_executable(chess
 	move.c
 	compare.c
 	game.c
-	tree.c
+	#	tree.c
 	mapper.c
 	)
 
@@ -31,6 +31,7 @@ if (RELEASE)
 	set(CMAKE_CXX_COMPILER clang++)
 	set(CMAKE_BUILD_TYPE Release)
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -Os")
+	add_compile_definitions(NO_LOG)
 else()
 	set(CMAKE_GENERATOR "Unix Makefiles")
 	set(CMAKE_BUILD_TYPE Debug)

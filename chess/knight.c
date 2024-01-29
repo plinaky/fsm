@@ -1,3 +1,4 @@
+#include "standards.h"
 #include "board.h"
 
 bool knight_moves(struct board *bo, uint8_t x, uint8_t y, uint16_t *ml, uint8_t *cnt)

@@ -1,3 +1,4 @@
+#include "standards.h"
 #include "board.h"
 
 #define _00_(_I_, _J_)  (_I_      ), (_J_      )

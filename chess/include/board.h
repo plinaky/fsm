@@ -1,8 +1,6 @@
 #ifndef BOARD_H
 #define BOARD_H
 
-#include "standards.h"
-
 #define	WHITE  (1 << 3)
 
 #define BK_ 6
@@ -34,6 +32,10 @@
 #define Y2_OF(_MO_) ((uint8_t)(((_MO_) >>  9) &  0b111))
 #define PROMO(_MO_) ((uint8_t)(((_MO_) >> 12) &  0b111))
 #define TAKOF(_MO_) ((uint8_t)(((_MO_) >> 15) &  0b1  ))
+
+#ifdef NO_LOG
+#define printf(...) ((void)0)
+#endif
 
 struct board {
 	uint8_t  pos[32];

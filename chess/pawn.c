@@ -1,3 +1,4 @@
+#include "standards.h"
 #include "board.h"
 
 static void promote(struct board *bo, uint16_t *ml, uint8_t *cnt)
