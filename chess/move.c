@@ -12,18 +12,7 @@ void print_move(uint16_t mo)
 
 void print_moves(uint16_t *ml, uint8_t cnt)
 {
-	uint8_t x = 0;
-	uint8_t y = 0;
-
-	x = X1_OF(ml[0]);
-	y = Y1_OF(ml[0]);
-
 	for (uint8_t i = 0; i < cnt; i++) {
- /*		if ((x != X1_OF(ml[i])) || (y != Y1_OF(ml[i]))) {
-			x = X1_OF(ml[i]);
-			y = Y1_OF(ml[i]);
-			printf("\n");
-		} */
 		if (! (i % 8))
 			printf("\n%3d: ", i);
 		print_move(ml[i]);
@@ -117,7 +106,6 @@ void apply_move(struct board *bo, uint16_t mo)
 	}
 
 	set_piece(bo, x2, y2, pi1);
-
 
 	bo->turn = (bo->turn ? 0 : 1);
 }

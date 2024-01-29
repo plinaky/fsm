@@ -43,7 +43,10 @@ bool pawn_moves(struct board *bo, uint8_t x, uint8_t y, uint16_t *ml, uint8_t *c
 			if ((BK_ == FIG(pi2)) && (COL(pi1) != COL(pi2)))
 				return true;
 			if ((FIG(pi2)) && (COL(pi1) != COL(pi2))) {
-				if (on_bound(x + dx) && (!on_bound(bo->hy)) && (x + dx == bo->hx) && (y + dy == bo->hy))
+				if (on_bound(x + dx)
+						&& (!on_bound(bo->hy))
+						&& (x + dx == bo->hx)
+						&& (y + dy == bo->hy))
 					return true;
 				ml[(*cnt)++] = MOVE_OF(x, y, x + dx, y + dy, 0, 1);
 				if (on_bound(x + dx))

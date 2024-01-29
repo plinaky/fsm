@@ -1,26 +1,21 @@
-#include "tree.h"
 #include "standards.h"
 
-struct node *create_map(uint32_t pos_count)
+void *create_map(const off_t size)
 {
-	const off_t size = pos_count * sizeof(struct node);
-
 	void *map = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 
 	if (map == MAP_FAILED) {
 		perror("Erreur lors de l'allocation de mémoire");
 		return NULL;
 	}
-	create_root((struct node *)map, pos_count);
 
-	return (struct node *)map; 
+	return map; 
 }
 
-struct node *open_map(const char *path, uint32_t pos_count)
+void *open_map(const char *path, const off_t size)
 {
-	const off_t size = pos_count * sizeof(struct node);
 	struct stat file_stat;
-	void *map= NULL;
+	void *map = NULL;
 	int fd;
 
 	// Ouvre le fichier en lecture seule
@@ -52,33 +47,30 @@ struct node *open_map(const char *path, uint32_t pos_count)
 		return map;
 	}
 
-	return (struct node *)map; 
+	return map; 
 }
 
-int flush_map(char *path, struct node *map, uint32_t pos_count)
+int flush_map(char *path, void *map, const off_t size)
 {
-	const off_t size = pos_count * sizeof(struct node);
-
 	// Écriture des données dans un fichier
 	int output_fd = open(path, O_CREAT | O_RDWR | O_TRUNC, S_IRUSR | S_IWUSR);
 
 	if (output_fd == -1) {
 		perror("Erreur lors de l'ouverture du fichier de sortie");
-		munmap((void *)map, size);
+		munmap(map, size);
 		return EXIT_FAILURE;
 	}
 
 	// Écriture des données dans le fichier
-	if (write(output_fd, (void *)map, size) == -1)
+	if (write(output_fd, map, size) == -1)
 		perror("Erreur lors de l'écriture dans le fichier de sortie");
 
 	// Fermeture du fichier de sortie
 	close(output_fd);
 
 	// Libère la mémoire allouée
-	if (munmap((void *)map, size) == -1)
+	if (munmap(map, size) == -1)
 		perror("Erreur lors de la libération de la mémoire allouée");
 
 	return EXIT_SUCCESS;
 }
-

@@ -11,7 +11,6 @@ uint8_t pref[8][8] = {
 	{WR_, WN_, WB_, WQ_, WK_, WB_, WN_, WR_}
 };
 
-
 bool in_bound(int8_t x, int8_t y)
 {
 	return (0 <= x) && (x < 8) && (0 <= y) && (y < 8);
@@ -173,11 +172,9 @@ void print_board(struct board *bo)
 
 void init_board(struct board *bo, uint8_t po[8][8])
 {
-	for (uint8_t i = 0; i < 8; i++) {
-		for (uint8_t j = 0; j < 8; j++) {
+	for (uint8_t i = 0; i < 8; i++)
+		for (uint8_t j = 0; j < 8; j++)
 			set_piece(bo, i, j, po[7 - i][j]);
-		}
-	}
 
 	bo->turn   = 1;
 	bo->wsc    = 1;

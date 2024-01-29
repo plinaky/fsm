@@ -4,28 +4,64 @@
 #include "mapper.h"
 #include "tree.h"
 
-uint16_t play(struct board *bo, uint16_t max)
+int8_t play(struct board *bo)
 {
-	uint16_t i, j, ml[255];
+	uint16_t ml[255];
 	uint32_t r;
-	uint8_t cnt = 1;
-	struct node *map = create_map(max);
+	uint16_t i, j;
+	uint16_t null_cnt = 0;
+	uint8_t move_cnt = 1;
+	bool check = false;
+	uint16_t max_moves = 1000;
 
-	for (i = 0; i < max; i++) {
-		if (list_legal_moves(bo, ml, &cnt) || !cnt)
-			break;
-		r = rand() % cnt;
+	void *game = create_map(max_moves * sizeof(struct board));
+
+	store_pos(game, bo, 0);
+
+	for (i = 1; i <= max_moves; i++) {
+
+		check = list_legal_moves(bo, ml, &move_cnt);
+
+		if (check && !move_cnt) {
+			printf("%+02d - checkmate at move %d\n", (bo->turn ? -1 : 1), i / 2);
+			goto checkmate;
+		}
+
+		if (!move_cnt) {
+			printf(" 0 - pat at move %d\n", i / 2);
+			goto draw;
+		}
+
+		r = rand() % move_cnt;
+
+		if ((TAKOF(ml[r])) ||
+				(BP_ == FIG(get_piece(bo, X1_OF(ml[r]), Y1_OF(ml[r])))))
+			null_cnt = 0;
+		else
+			null_cnt++;
+
+		if (100 == null_cnt) {
+			printf(" 0 - 50 moves rule at move %d\n", i / 2);
+			goto draw;
+		}
+
 		apply_move(bo, ml[r]);
-		store_pos(map, bo, ml[r]);
+
+		if (3 == store_pos(game, bo, i)) {
+			printf(" 0 - position repeated 3 times at move %d\n", i / 2);
+			goto draw;
+		}
 	}
 
-	flush_map("game0.txt", map, max);
-	map = open_map("game0.txt", max);
+	printf("WARNING: no draw in %d half-moves!\n", max_moves);
 
-	for (i = 0; i < ((uint32_t)(map[0].r)); i++) {
-		printf("Move %d : ", i);
-		print_move(map[i].move);
-		print_pos(&map[i].b);
-	}
-	return i;
+draw :
+	flush_map("game0.txt", game, max_moves * sizeof(struct board));
+	return 0;
+
+checkmate :
+	flush_map("game0.txt", game, max_moves * sizeof(struct board));
+	return (bo->turn ? -1 : 1);
+
 }
+
