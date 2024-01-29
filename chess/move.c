@@ -115,6 +115,7 @@ bool list_legal_moves(struct board *bo, uint16_t *ml, uint8_t *cnt)
 	struct board b;
 	uint16_t ml2[256];
 	uint8_t cnt2;
+	bool ret = false;
 
 	if (list_moves(bo, ml, cnt))
 		return true;
@@ -130,9 +131,11 @@ bool list_legal_moves(struct board *bo, uint16_t *ml, uint8_t *cnt)
 	}
 
 	if (*cnt)
-		return false;
+		return ret;
 
 	bo->turn = (bo->turn ? 0 : 1);
+	ret = list_moves(bo, ml2, &cnt2);
+	bo->turn = (bo->turn ? 0 : 1);
 
-	return list_moves(bo, ml2, &cnt2);
+	return ret;
 }

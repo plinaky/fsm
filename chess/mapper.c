@@ -50,6 +50,15 @@ void *open_map(const char *path, const off_t size)
 	return map; 
 }
 
+int delete_map(void *map, const off_t size)
+{
+	// Libère la mémoire allouée
+	if (munmap(map, size) == -1)
+		perror("Erreur lors de la libération de la mémoire allouée");
+
+	return EXIT_SUCCESS;
+}
+
 int flush_map(char *path, void *map, const off_t size)
 {
 	// Écriture des données dans un fichier

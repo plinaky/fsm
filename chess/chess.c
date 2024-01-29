@@ -8,9 +8,9 @@ int main(void)
 
 	srand(time(NULL));   // Initialization, should only be called once.
 
-	for (uint32_t i = 1; i <= 100; i++) {
+	for (uint32_t i = 1; i <= 5000; i++) {
 		init_board(&b, pref);
-		printf("game %3d : ", i) ;
+		printf("\n\ngame %3d : ", i) ;
 		play(&b);
 	}
 

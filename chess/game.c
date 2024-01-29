@@ -23,12 +23,12 @@ int8_t play(struct board *bo)
 		check = list_legal_moves(bo, ml, &move_cnt);
 
 		if (check && !move_cnt) {
-			printf("%+02d - checkmate at move %d\n", (bo->turn ? -1 : 1), i / 2);
+			printf("%+02d - checkmate at move %d", (bo->turn ? -1 : 1), i / 2);
 			goto checkmate;
 		}
 
 		if (!move_cnt) {
-			printf(" 0 - pat at move %d\n", i / 2);
+			printf(" 0 - pat at move %d", i / 2);
 			goto draw;
 		}
 
@@ -41,26 +41,28 @@ int8_t play(struct board *bo)
 			null_cnt++;
 
 		if (100 == null_cnt) {
-			printf(" 0 - 50 moves rule at move %d\n", i / 2);
+			printf(" 0 - 50 moves rule at move %d", i / 2);
 			goto draw;
 		}
 
 		apply_move(bo, ml[r]);
 
 		if (3 == store_pos(game, bo, i)) {
-			printf(" 0 - position repeated 3 times at move %d\n", i / 2);
+			printf(" 0 - position repeated 3 times at move %d", i / 2);
 			goto draw;
 		}
 	}
 
-	printf("WARNING: no draw in %d half-moves!\n", max_moves);
+	printf("WARNING: no draw in %d half-moves!", max_moves);
 
 draw :
-	flush_map("game0.txt", game, max_moves * sizeof(struct board));
+	print_pos(bo);
+	delete_map(game, max_moves * sizeof(struct board));
 	return 0;
 
 checkmate :
-	flush_map("game0.txt", game, max_moves * sizeof(struct board));
+	print_pos(bo);
+	delete_map(game, max_moves * sizeof(struct board));
 	return (bo->turn ? -1 : 1);
 
 }

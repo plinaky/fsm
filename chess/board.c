@@ -132,9 +132,7 @@ void print_pos(struct board *bo)
 {
 	uint8_t i, j;
 
-	printf("\n");
 	print_game_status(bo);
-	printf("\n");
 	printf("\t   A  B  C  D  E  F  G  H\n");
 	for (i = 7; i < 8; i--) {
 		printf("\t%d ", i + 1);
