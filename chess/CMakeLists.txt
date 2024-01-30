@@ -17,7 +17,7 @@ add_executable(chess
 	move.c
 	compare.c
 	game.c
-	#	tree.c
+	tree.c
 	mapper.c
 	)
 

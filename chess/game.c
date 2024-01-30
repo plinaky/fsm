@@ -16,7 +16,7 @@ int8_t play(struct board *bo)
 	bool check = false;
 	uint16_t max_moves = 1000;
 
-	void *game = create_map(max_moves * sizeof(struct board));
+	struct board *game = (struct board *)create_map(max_moves * sizeof(struct board));
 
 	store_pos(game, bo, 0);
 
