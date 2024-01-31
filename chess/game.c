@@ -5,7 +5,6 @@
 #include "mapper.h"
 #include "tree.h"
 
-
 int8_t play(struct board *bo)
 {
 	uint16_t ml[255];

@@ -103,3 +103,18 @@ uint8_t store_pos(void *map, struct board *b, uint16_t pos)
 	return res;
 }
 
+uint32_t store_board(void *map, struct board *b, uint32_t pos)
+{
+	struct board *cur = (struct board *)map;
+	uint32_t i;
+
+	for (i = 0; i < pos; i++) {
+		if (compare(cur + i, b))
+			return i;
+	}
+
+	memcpy(cur + i, b, sizeof(struct board));
+
+	return i;
+}
+
