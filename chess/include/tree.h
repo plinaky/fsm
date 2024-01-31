@@ -30,4 +30,3 @@ uint8_t store_pos(struct board *bmap, struct board *bo, uint16_t pos);
 uint32_t store_board(struct board *bmap, struct board *bo, uint16_t pos);
 
 #endif
-
