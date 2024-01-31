@@ -20,5 +20,7 @@ int init_maps(void)
 
 uint8_t add_move(struct board *bo, uint16_t move)
 {
-	uint32_t store_board(void *map, struct board *b, uint32_t pos)
+	struct link lk;
+
+	lk.start = store_board(void *map, struct board *b, uint32_t pos)
 }
