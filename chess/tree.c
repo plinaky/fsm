@@ -2,19 +2,17 @@
 #include "board.h"
 #include "mapper.h"
 #include "tree.h"
+#include "move.h"
 #include "compare.h"
 
-#define MAX_BOARD (UINT32_MAX >> 4)
-#define MAX_LINK  (UINT32_MAX >> 4)
+//#define MAX_LINK (UINT32_MAX / (100 * sizeof(struct link)))
+#define MAX_LINK (1 << 30)
 
-struct board *board_map;
-struct link   *link_map;
+struct link *link_map = NULL;
 
-static const char board_map_file[] = "./data/boards";
 static const char link_map_file[]  = "./data/links";
 
-
-int open_game_maps(void)
+int open_game_map(void)
 {
 	static bool init_done = false;
 	off_t size;
@@ -22,97 +20,77 @@ int open_game_maps(void)
 	if (init_done)
 		return EXIT_SUCCESS;
 
-	size = MAX_BOARD * sizeof(struct board);
-	board_map = (struct board *)open_map(board_map_file, size);
-
-	if (NULL == board_map)
-		board_map = (struct board *)create_map(size);
-
-	if (NULL == board_map)
-		return EXIT_FAILURE;
-
 	size = MAX_LINK * sizeof(struct link);
 	link_map = (struct link *)open_map(link_map_file, size);
 
-	if (NULL == link_map)
-		link_map  = ( struct link *)create_map(size);
-
 	if (NULL == link_map) {
-		delete_map(board_map, MAX_BOARD * sizeof(struct board));
-		return EXIT_FAILURE;
+		printf("failed to open game map\n");
+		exit(1);
 	}
 
-	struct board_head *bh = (struct board_head *)board_map;
-	struct link_head  *lh = (struct link_head  *) link_map;
+	struct link_head *lh = (struct link_head *)link_map;
 
-	bh->mapped_size  = MAX_BOARD;
-	bh->current_size =         1;
-	lh->mapped_size  =  MAX_LINK;
-	lh->current_size =         1;
+	lh->mapped_size  = MAX_LINK;
+	lh->current_size = 1;
 
 	init_done = true; 
 
 	return EXIT_SUCCESS;
-
 }
 
-uint8_t store_pos(struct board *bmap, struct board *bo, uint16_t pos)
+int flush_game_map(void)
+{
+	struct link_head *lh = (struct link_head *)link_map;
+
+	return flush_map(link_map, lh->current_size * sizeof(struct link));
+}
+
+uint8_t store_pos(struct board *bmap, struct board *bo)
 {
 	uint16_t i;
-	uint8_t res = 0;
+	uint8_t res = 1;
+	
+	struct board_head *bh = (struct board_head *)bmap;
 
-	for (i = 0; i < pos; i++)
+	if (0 == bh->current_size)
+		bh->current_size = 2;
+
+	for (i = 1; i < bh->current_size; i++)
 		if (compare(bmap + i, bo))
 			res++;
 
 	memcpy(bmap + i, bo, sizeof(struct board));
 
-	res++;
-
 	return res;
 }
 
-uint32_t store_board(struct board *bo)
+uint32_t store_link(uint32_t up, uint32_t le, uint16_t mo)
 {
-	uint32_t i, pos;
-
-	struct board_head *bh = (struct board_head *)board_map;
-
-	for (i = 0; i < bh->current_size; i++)
-		if (compare(board_map + i, bo))
-			return i;
-
-	if (MAX_BOARD == i)
-		return 0;
-
-	bh->current_size++;
-	memcpy(board_map + i, bo, sizeof(struct board));
-
-	return i;
-}
-
-uint32_t store_link(uint32_t start, uint32_t stop, uint16_t move)
-{
-	uint32_t i, pos;
+	if (NULL == link_map)
+		open_game_map();
 
 	struct link_head *lh = (struct link_head *)link_map;
 
-	for (i = 0; i < lh->current_size; i++) {
-		if ((link_map[i].start == start) && (link_map[i].stop == stop))
-			return i;
+	uint32_t po = lh->current_size;
+
+	if (MAX_LINK == po) {
+		printf("no memory left to create move ");
+		print_move(mo);
+		printf("\n");
+		flush_game_map();
+		exit(1);
 	}
 
-	if (MAX_LINK == i)
-		return 0;
-
 	lh->current_size++;
-	link_map[i].start = start;
-	link_map[i].stop  = stop;
-	link_map[i].win   = 0;
-	link_map[i].loss  = 0;
-	link_map[i].view  = 0;
-	link_map[i].cost  = 0;
-	link_map[i].move  = move;
 
-	return i;
+	memset(link_map + po, 0, sizeof(link));
+
+	if (0 == le)
+		link_map[up].dn = po;
+
+	link_map[po].le = le;
+	link_map[po].up = up;
+	link_map[po].mo = mo;
+
+	return po;
 }
