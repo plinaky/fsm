@@ -6,7 +6,7 @@ struct link {
     uint32_t stop;
     uint32_t win;
     uint32_t loss;
-    uint32_t draw;
+    uint32_t view;
     uint16_t cost;
     uint16_t move;
 };
@@ -23,10 +23,12 @@ struct board_head {
     uint16_t unused[13];
 };
 
-const char link_map_file[]  = "./data/links";
-const char board_map_file[] = "./data/boards";
+extern struct board *board_map;
+extern struct link   *link_map;
 
+int open_game_maps(void);
 uint8_t store_pos(struct board *bmap, struct board *bo, uint16_t pos);
-uint32_t store_board(struct board *bmap, struct board *bo, uint16_t pos);
+uint32_t store_board(struct board *bo, uint16_t pos);
+uint32_t store_link(uint32_t start, uint32_t stop, uint16_t move);
 
 #endif

@@ -2,6 +2,7 @@
 #include "board.h"
 #include "move.h"
 #include "compare.h"
+#include "tree.h"
 
 void print_move(uint16_t mo)
 {
@@ -133,6 +134,55 @@ bool list_legal_moves(struct board *bo, uint16_t *ml, uint8_t *cnt)
 
 	if (*cnt)
 		return ret;
+
+	bo->turn = (bo->turn ? 0 : 1);
+	ret = list_moves(bo, ml2, &cnt2);
+	bo->turn = (bo->turn ? 0 : 1);
+
+	return ret;
+}
+
+bool store_legal_moves(struct board *bo, uint16_t *ml, uint8_t *cnt)
+{
+	struct board b;
+	uint32_t start, stop, lnk_pos;
+	uint16_t ml2[256];
+	uint8_t cnt2;
+	bool ret = false;
+
+	if (list_moves(bo, ml, cnt)) {
+		printf("invalid position\n");
+		return true;
+	}
+
+	start = store_board(bo);
+
+	if (0 == start) {
+		printf("no room left for boards\n");
+		return true;
+	}
+
+	for (int16_t i = 0; i < *cnt; i++) {
+		memcpy(&b, bo, sizeof(struct board));
+		apply_move(&b, ml[i]);
+
+		if (list_moves(&b, ml2, &cnt2)) {
+			memmove(ml + i, ml + i + 1, sizeof(uint16_t) * ((*cnt) - i - 1));
+			(*cnt)--;
+			i--;
+		} else {
+			stop = store_board(&b);
+			lnk_pos = store_link(start, stop, ml[i]);
+
+			if (0 == lnk_pos) {
+				printf("no room left for links\n");
+				return true;
+			}
+		}
+	}
+
+	if (*cnt)
+		return false;
 
 	bo->turn = (bo->turn ? 0 : 1);
 	ret = list_moves(bo, ml2, &cnt2);

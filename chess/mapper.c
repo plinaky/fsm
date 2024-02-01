@@ -24,29 +24,30 @@ void *open_map(const char *path, const off_t size)
 	fd = open(path, O_RDONLY);
 	if (fd == -1) {
 		perror("Erreur lors de l'ouverture du fichier");
-		return map;
+		return NULL;
 	}
 
 	// Obtient la taille du fichier
 	if (fstat(fd, &file_stat) == -1) {
 		perror("Erreur lors de la récupération de la taille du fichier");
 		close(fd);
-		return map;
+		return NULL;
 	}
 
 	// Vérifie que la taille du fichier est suffisante
 	if (file_stat.st_size < size) {
 		fprintf(stderr, "La taille du fichier est inférieure à %d Mo\n", (int)(size / (1024 * 1024)));
 		close(fd);
-		return map;
+		return NULL;
 	}
 
 	// Utilise mmap pour mapper le fichier en mémoire
 	map = mmap(NULL, size, PROT_READ, MAP_PRIVATE, fd, 0);
+
 	if (map == MAP_FAILED) {
 		perror("Erreur lors du mappage du fichier en mémoire");
 		close(fd);
-		return map;
+		return NULL;
 	}
 
 	return map; 
@@ -61,7 +62,7 @@ int delete_map(void *map, const off_t size)
 	return EXIT_SUCCESS;
 }
 
-int flush_map(char *path, void *map, const off_t size)
+int flush_map(const char *path, void *map, const off_t size)
 {
 	// Écriture des données dans un fichier
 	int output_fd = open(path, O_CREAT | O_RDWR | O_TRUNC, S_IRUSR | S_IWUSR);
