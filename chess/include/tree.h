@@ -24,6 +24,7 @@ extern struct link *link_map;
 int open_game_map(void);
 int flush_game_map(void);
 uint8_t store_pos(struct board *bmap, struct board *bo);
-uint32_t store_link(uint32_t up, uint32_t le, uint16_t mo);
+uint32_t store_link(uint32_t up, uint16_t mo);
+void print_link(uint32_t po);
 
 #endif

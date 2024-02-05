@@ -12,11 +12,12 @@ int main(void)
 	srand(time(NULL));   // Initialization, should only be called once.
 	init_board(&b2, pref);
 
-	for (uint32_t i = 1; i <= 1000000; i++) {
+	for (uint32_t i = 1; i <= 1000; i++) {
 		memcpy(&b1, &b2, sizeof(struct board));
 		printf("\n\ngame %3d : ", i) ;
 		play(&b1);
 	}
+	print_link(1);
 
 	flush_game_map();
 

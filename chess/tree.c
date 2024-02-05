@@ -64,14 +64,14 @@ uint8_t store_pos(struct board *bmap, struct board *bo)
 	return res;
 }
 
-uint32_t store_link(uint32_t up, uint32_t le, uint16_t mo)
+uint32_t store_link(uint32_t up, uint16_t mo)
 {
 	if (NULL == link_map)
 		open_game_map();
 
 	struct link_head *lh = (struct link_head *)link_map;
 
-	uint32_t po = lh->current_size;
+	uint32_t po, pv;
 
 	if (MAX_LINK == po) {
 		printf("no memory left to create move ");
@@ -81,16 +81,55 @@ uint32_t store_link(uint32_t up, uint32_t le, uint16_t mo)
 		exit(1);
 	}
 
+	for (po = 1; po < lh->current_size; po++) {
+		if ((up == link_map[po].up) && (mo == link_map[po].mo)) {
+			printf("move ");
+			print_move(mo);
+			printf(" already exists\n");
+			return po;
+		}
+	}
+
 	lh->current_size++;
-
 	memset(link_map + po, 0, sizeof(link));
-
-	if (0 == le)
-		link_map[up].dn = po;
-
-	link_map[po].le = le;
 	link_map[po].up = up;
 	link_map[po].mo = mo;
 
+
+	if (0 == link_map[up].dn) {
+		link_map[up].dn = po;
+	} else {
+		pv = link_map[up].dn;
+
+		while (link_map[pv].le != 0)
+			pv = link_map[pv].le;
+
+		link_map[pv].le = po;
+	}
+
 	return po;
+}
+
+void print_link(uint32_t po)
+{
+	if (NULL == link_map)
+		return;
+
+	struct link_head *lh = (struct link_head *)link_map;
+	uint32_t p = po;
+
+	print_move(link_map[p].mo);
+
+	if (0 == link_map[po].dn) {
+		printf(" *\n\n");
+	} else {
+		print_link(link_map[po].dn);
+	}
+
+	if (0 != link_map[po].le) {
+
+		print_move(link_map[p].mo);
+		print_link(link_map[po].le);
+	}
+
 }

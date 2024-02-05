@@ -9,7 +9,9 @@ void print_move(uint16_t mo)
 	print_square(X1_OF(mo), Y1_OF(mo));
 	printf("%c", (TAKOF(mo) ? 'x' : '-'));
 	print_square(X2_OF(mo), Y2_OF(mo));
-	printf("%c ", (PROMO(mo) ? to_char(PROMO(mo) | WHITE) : ' '));
+	if (PROMO(mo))
+		printf("%c", to_char(PROMO(mo) | WHITE));
+	printf(" ");
 }
 
 void print_moves(uint16_t *ml, uint8_t cnt)
