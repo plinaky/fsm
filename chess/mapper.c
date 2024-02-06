@@ -1,6 +1,4 @@
 #include "standards.h"
-#include "board.h"
-#include "compare.h"
 
 static int fd;
 

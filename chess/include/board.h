@@ -62,5 +62,7 @@ void print_square(uint8_t x, uint8_t y);
 void print_board(struct board *bo);
 void print_pos(struct board *bo);
 void init_board(struct board *bo, uint8_t po[8][8]);
+bool same_board(struct board *b1, struct board *b2);
+bool same_pos(struct board *b1, struct board *b2);
 
 #endif
