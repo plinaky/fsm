@@ -47,3 +47,18 @@ Mask  bvalue rvalue
 0 3 3 3 3 3 = 19
 
 
+
+
+
+struct node {
+    struct board;
+    uint16_t mo;
+    uint32_t wi, lo, vi;
+};
+-> 48 octets
+
+16 16 16
+
+2²⁴
+
+

@@ -39,14 +39,15 @@
 
 struct board {
 	uint8_t  pos[32];
-	uint16_t turn   : 1;
-	uint16_t wsc    : 1;
-	uint16_t wbc    : 1;
-	uint16_t bsc    : 1;
-	uint16_t bbc    : 1;
-	uint16_t hx     : 3;
-	uint16_t hy     : 3;
-	uint16_t unused : 5;
+	uint16_t turn : 1;
+	uint16_t wsc  : 1; /* castling rights */
+	uint16_t wbc  : 1;
+	uint16_t bsc  : 1;
+	uint16_t bbc  : 1;
+	uint16_t hx   : 3; /* en passant or castle square */
+	uint16_t hy   : 3;
+	uint16_t ca   : 4; /* last captured piece */
+	uint16_t cm   : 1; /* checkmate */
 };
 
 extern uint8_t pref[8][8];
