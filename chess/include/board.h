@@ -48,6 +48,7 @@ struct board {
 	uint16_t hy   : 3;
 	uint16_t ca   : 4; /* last captured piece */
 	uint16_t cm   : 1; /* checkmate */
+    uint16_t mo;       /* last move, used to revert play */
 };
 
 extern uint8_t pref[8][8];

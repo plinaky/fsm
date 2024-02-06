@@ -16,9 +16,7 @@ void play(struct board *bo)
 	bool check = false;
 	uint16_t max_moves = 511;
 
-	struct board game[512];
-
-	store_pos(game, bo);
+	store_pos(bo);
 
 	for (i = 1; i <= max_moves; i++) {
 
@@ -48,10 +46,10 @@ void play(struct board *bo)
 		}
 
 		apply_move(bo, ml[move]);
-		up = store_link(up, ml[move]);
-		link_map[up].vi++;
 
-		if (3 == store_pos(game, bo)) {
+		next = store_pos(bo);
+
+		if (node_map[next].vi >= 3) {
 			printf(" 0 - position repeated 3 times at move %d", i / 2);
 			goto draw;
 		}
@@ -67,8 +65,8 @@ checkmate :
 	print_pos(bo);
 
 	if (bo->turn)
-		link_map[up].wi++;
+		node_map[up].wi++;
 	else
-		link_map[up].lo++;
+		node_map[up].lo++;
 
 }

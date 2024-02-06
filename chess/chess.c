@@ -17,7 +17,6 @@ int main(void)
 		printf("\n\ngame %3d : ", i) ;
 		play(&b1);
 	}
-	print_link(1);
 
 	flush_game_map();
 

@@ -39,7 +39,8 @@ uint32_t store_pos(struct board *bo)
 {
 	uint32_t i, j, a = 0, b = 0, c = 0;
 	uint8_t *data = (uint8_t *)bo;
-	struct node no;
+	struct board nb;
+	size_t bs = sizeof(struct board);
 
 	for (i = 0; i < 8; i++)
 		a ^= data[3 * i];
@@ -50,31 +51,32 @@ uint32_t store_pos(struct board *bo)
 	for (i = 0; i < 8; i++)
 		c ^= data[3 * i + 2];
 
-	j = (a << 16 + b << 8 + c) % MAX_NODE;
-	memset(&no, 0, sizeof(struct node));
+	j = ((a << 16) + (b << 8) + c) % MAX_NODE;
+
+	memset(&nb, 0, sizeof(struct board));
 
 	for (i = j; i < MAX_NODE; i++) {
 
-		if (0 == memcmp(&node_map[i].bo, bo)) {
+		if (same_board(&node_map[i].bo, bo)) {
 			node_map[i].vi++;
 			return i;
 		}
 
-		if (0 == memcmp(node_map + i, no)) {
-			memcpy(&node_map[i].bo, bo, sizeof(struct board));
+		if (same_board(&node_map[i].bo, &nb)) {
+			memcpy(&node_map[i].bo, bo, bs);
 			return i;
 		}
 	}
 
 	for (i = 0; i < j; i++) {
 
-		if (0 == memcmp(&node_map[i].bo, bo)) {
+		if (same_board(&node_map[i].bo, bo)) {
 			node_map[i].vi++;
 			return i;
 		}
 
-		if (0 == memcmp(node_map + i, no)) {
-			memcpy(&node_map[i].bo, bo, sizeof(struct board));
+		if (same_board(&node_map[i].bo, &nb)) {
+			memcpy(&node_map[i].bo, bo, bs);
 			return i;
 		}
 	}

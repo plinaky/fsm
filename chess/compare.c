@@ -121,9 +121,9 @@ uint32_t count_diff(struct board *b1, struct board *b2)
 	return sum;
 }
 
-bool compare(struct board *b1, struct board *b2)
+bool same_board(struct board *b1, struct board *b2)
 {
-	return 0 == memcmp(b1, b2, sizeof(struct board));
+	return 0 == memcmp(b1, b2, sizeof(struct board) - 2);
 }
 
 
