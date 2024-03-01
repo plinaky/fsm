@@ -37,106 +37,19 @@ int flush_game_map(void)
 
 static uint32_t hash_pos(struct board *bo)
 {
-	uint32_t i, a = 0, b = 0, c = 0;
 	uint8_t *data = (uint8_t *)bo;
+	uint32_t res = 0;
+	uint8_t i, j, hash[4];
 
-	for (i = 0; i < 8; i++)
-		a ^= data[3 * i];
+	for (i = 0; i < 4; i++)
+		hash[i] = 0;
 
-	for (i = 0; i < 8; i++)
-		b ^= data[3 * i + 1];
+	for (i = 0; i < sizeof(struct board); i++)
+		hash[i % 4] ^= data[i];
 
-	for (i = 0; i < 8; i++)
-		c ^= data[3 * i + 2];
+	for (i = 0; i < 4; i++)
+		res += hash[i] << (8 * i);
 
-	return ((a << 16) + (b << 8) + c) % MAX_NODE;
+	return res;
 
-}
-
-uint32_t store_pos(struct board *bo)
-{
-	uint32_t i, j;
-	struct board nb;
-	size_t bs = sizeof(struct board);
-	memset(&nb, 0, sizeof(struct board));
-	
-	j = hash_pos(bo);
-
-	for (i = j; i < MAX_NODE; i++) {
-
-		if (same_pos(&node_map[i].bo, bo)) {
-			node_map[i].vi++;
-			return i;
-		}
-
-		if (same_pos(&node_map[i].bo, &nb)) {
-			memcpy(&node_map[i].bo, bo, bs);
-			return i;
-		}
-	}
-
-	for (i = 0; i < j; i++) {
-
-		if (same_pos(&node_map[i].bo, bo)) {
-			node_map[i].vi++;
-			return i;
-		}
-
-		if (same_pos(&node_map[i].bo, &nb)) {
-			memcpy(&node_map[i].bo, bo, bs);
-			return i;
-		}
-	}
-
-	return 0;
-}
-
-void clear_pos(uint32_t po)
-{
-	memset(&node_map[po], 0, sizeof(struct node));
-}
-
-void moves_from_pos(uint32_t po, uint16_t *ml, uint8_t *cnt)
-{
-	uint32_t i, j;
-	struct board nb;
-
-	*cnt = 0;	
-
-	if (0 == node_map[bo].vi)
-		return;
-
-	if (1 == node_map[po].bo.cm)
-		return true;
-
-
-	j = hash_pos(bo);
-
-	for (i = j; i < MAX_NODE; i++) {
-
-		if (same_pos(&node_map[i].bo, bo)) {
-			node_map[i].vi++;
-			return i;
-		}
-
-		if (same_pos(&node_map[i].bo, &nb)) {
-			memcpy(&node_map[i].bo, bo, bs);
-			return i;
-		}
-	}
-
-	for (i = 0; i < j; i++) {
-
-		if (same_pos(&node_map[i].bo, bo)) {
-			node_map[i].vi++;
-			return i;
-		}
-
-		if (same_pos(&node_map[i].bo, &nb)) {
-			memcpy(&node_map[i].bo, bo, bs);
-			return i;
-		}
-	}
-
-	return 0;
 }

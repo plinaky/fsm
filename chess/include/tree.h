@@ -3,14 +3,14 @@
 
 struct node {
     uint32_t wi, lo, vi;
-    struct board bo;
+    uint32_t hash;
+    uint16_t move;
 };
 
 extern struct node *node_map;
 
 int open_game_map(void);
 int flush_game_map(void);
-uint32_t store_pos(struct board *bo);
 
 #endif
 

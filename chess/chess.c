@@ -1,7 +1,6 @@
 #include "standards.h"
 #include "board.h"
 #include "game.h"
-#include "tree.h"
 
 int main(void)
 {
@@ -17,8 +16,6 @@ int main(void)
 		printf("\n\ngame %3d : ", i) ;
 		play(&b1);
 	}
-
-	flush_game_map();
 
 	printf("\n");
 

@@ -48,7 +48,6 @@ struct board {
 	uint16_t hy   : 3;
 	uint16_t ca   : 4; /* last captured piece */
 	uint16_t cm   : 1; /* checkmate */
-    uint16_t mo;       /* last move, used to revert play */
 };
 
 extern uint8_t pref[8][8];
@@ -63,6 +62,5 @@ void print_board(struct board *bo);
 void print_pos(struct board *bo);
 void init_board(struct board *bo, uint8_t po[8][8]);
 bool same_board(struct board *b1, struct board *b2);
-bool same_pos(struct board *b1, struct board *b2);
 
 #endif

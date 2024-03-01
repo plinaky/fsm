@@ -1,8 +1,6 @@
 #include "standards.h"
 #include "board.h"
 #include "move.h"
-#include "compare.h"
-#include "tree.h"
 
 void print_move(uint16_t mo)
 {
@@ -24,15 +22,9 @@ void print_moves(uint16_t *ml, uint8_t cnt)
 	printf("\n");
 }
 
-bool list_moves(uint32_t no, uint32_t *pl, uint8_t *cnt)
+bool list_moves(struct board *bo, uint16_t *ml, uint8_t *cnt)
 {
-	struct board *bo = &node_map[no].bo;
-	uint16_t ml[200];
 	*cnt = 0;
-
-	if ((node_map[no].vi) || (1 == node_map[po].bo.cm))
-		return false;
-	}
 
 	for (int8_t x = 0; x < 8; x++) {
 		for (int8_t y = 0; y < 8; y++) {
@@ -44,9 +36,6 @@ bool list_moves(uint32_t no, uint32_t *pl, uint8_t *cnt)
 			    )
 				return true;
 		}
-	}
-
-	for (uint8_t i = 0; i < *cnt) {
 	}
 
 	return false;
@@ -123,14 +112,12 @@ void apply_move(struct board *bo, uint16_t mo)
 	bo->turn = (bo->turn ? 0 : 1);
 }
 
-bool list_legal_moves(uint32_t no, uint32_t *pl, uint8_t *cnt)
+bool list_legal_moves(struct board *bo, uint16_t *ml, uint8_t *cnt)
 {
-	struct board b, *bo;
+	struct board b;
 	uint16_t ml2[256];
 	uint8_t cnt2;
 	bool ret = false;
-
-	bo = &node_map[no].bo;
 
 	if (list_moves(bo, ml, cnt))
 		return true;

@@ -191,9 +191,3 @@ bool same_board(struct board *b1, struct board *b2)
 {
 	return 0 == memcmp(b1, b2, sizeof(struct board));
 }
-
-bool same_pos(struct board *b1, struct board *b2)
-{
-	return 0 == memcmp(b1, b2, sizeof(struct board) - 2);
-}
-
